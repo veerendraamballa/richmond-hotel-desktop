@@ -72,9 +72,7 @@ jobs:
         run: npm ci
 
       - name: Build for ${{ matrix.platform }}
-        run: npm run build:${{ matrix.platform }}
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: npm run build:${{ matrix.platform }} -- --publish never
 
       - name: List build output (Windows)
         if: matrix.os == 'windows-latest'
@@ -123,6 +121,8 @@ jobs:
     needs: build
     runs-on: ubuntu-latest
     if: startsWith(github.ref, 'refs/tags/v')
+    permissions:
+      contents: write
     
     steps:
       - name: Checkout code
