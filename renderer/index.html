@@ -8,329 +8,464 @@
 </head>
 <body>
     <div class="app-container">
+
         <!-- Sidebar -->
-        <div class="sidebar">
-            <div class="sidebar-header">
-                <h2>🏨 Richmond Hotel</h2>
-                <p class="version">v1.0.0 Desktop</p>
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-logo">
+                <div class="logo-icon">R</div>
+                <div class="logo-text">
+                    <span class="logo-name">Richmond</span>
+                    <span class="logo-sub">Hotel Manager</span>
+                </div>
             </div>
-            
+
             <nav class="sidebar-nav">
+                <span class="nav-label">MAIN</span>
                 <button class="nav-item active" data-tab="dashboard">
-                    <span class="icon">📊</span>
+                    <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
                     <span>Dashboard</span>
                 </button>
                 <button class="nav-item" data-tab="rooms">
-                    <span class="icon">🛏️</span>
+                    <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
                     <span>Rooms</span>
                 </button>
                 <button class="nav-item" data-tab="bookings">
-                    <span class="icon">📅</span>
+                    <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
                     <span>Bookings</span>
                 </button>
                 <button class="nav-item" data-tab="guests">
-                    <span class="icon">👥</span>
+                    <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>
                     <span>Guests</span>
                 </button>
+
+                <span class="nav-label">FINANCE</span>
                 <button class="nav-item" data-tab="billing">
-                    <span class="icon">💳</span>
+                    <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
                     <span>Billing</span>
                 </button>
                 <button class="nav-item" data-tab="reports">
-                    <span class="icon">📈</span>
+                    <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
                     <span>Reports</span>
                 </button>
+
+                <span class="nav-label">SYSTEM</span>
                 <button class="nav-item" data-tab="settings">
-                    <span class="icon">⚙️</span>
+                    <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
                     <span>Settings</span>
                 </button>
             </nav>
 
-            <div class="sidebar-footer">
-                <p>© 2024 Richmond Hotel</p>
-                <p class="small">Desktop Edition</p>
+            <div class="sidebar-bottom">
+                <div class="hotel-info">
+                    <div class="hotel-avatar">H</div>
+                    <div>
+                        <p class="hotel-name">Richmond Hotel</p>
+                        <p class="hotel-version">v1.0.0</p>
+                    </div>
+                </div>
             </div>
-        </div>
+        </aside>
 
         <!-- Main Content -->
-        <div class="main-content">
-            <!-- Dashboard Tab -->
-            <div id="dashboard" class="tab-content active">
-                <div class="content-header">
-                    <h1>Dashboard</h1>
-                    <button class="btn btn-primary" onclick="refreshDashboard()">
-                        🔄 Refresh
+        <div class="main-wrapper">
+
+            <!-- Top Header -->
+            <header class="topbar">
+                <div class="topbar-left">
+                    <button class="sidebar-toggle" onclick="toggleSidebar()">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+                    </button>
+                    <div class="topbar-breadcrumb">
+                        <span id="currentPageName">Dashboard</span>
+                    </div>
+                </div>
+                <div class="topbar-right">
+                    <div class="topbar-clock" id="topbarClock"></div>
+                    <button class="topbar-btn" onclick="refreshCurrent()" title="Refresh">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 11-2.12-9.36L23 10"/></svg>
                     </button>
                 </div>
+            </header>
 
-                <div class="stats-grid">
-                    <div class="stat-card stat-primary">
-                        <div class="stat-icon">🏨</div>
-                        <div class="stat-details">
-                            <h3 id="totalRooms">0</h3>
-                            <p>Total Rooms</p>
+            <!-- Tab Pages -->
+            <main class="main-content">
+
+                <!-- Dashboard -->
+                <div id="dashboard" class="tab-content active">
+                    <div class="page-header">
+                        <div>
+                            <h1 class="page-title">Dashboard</h1>
+                            <p class="page-subtitle">Welcome back — here's what's happening today</p>
+                        </div>
+                        <button class="btn btn-primary" onclick="refreshDashboard()">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 11-2.12-9.36L23 10"/></svg>
+                            Refresh
+                        </button>
+                    </div>
+
+                    <div class="kpi-grid">
+                        <div class="kpi-card kpi-blue">
+                            <div class="kpi-icon">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+                            </div>
+                            <div class="kpi-body">
+                                <span class="kpi-label">Total Rooms</span>
+                                <span class="kpi-value" id="totalRooms">—</span>
+                            </div>
+                        </div>
+                        <div class="kpi-card kpi-red">
+                            <div class="kpi-icon">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                            </div>
+                            <div class="kpi-body">
+                                <span class="kpi-label">Occupied</span>
+                                <span class="kpi-value" id="occupiedRooms">—</span>
+                            </div>
+                        </div>
+                        <div class="kpi-card kpi-green">
+                            <div class="kpi-icon">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+                            </div>
+                            <div class="kpi-body">
+                                <span class="kpi-label">Available</span>
+                                <span class="kpi-value" id="availableRooms">—</span>
+                            </div>
+                        </div>
+                        <div class="kpi-card kpi-amber">
+                            <div class="kpi-icon">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>
+                            </div>
+                            <div class="kpi-body">
+                                <span class="kpi-label">Total Revenue</span>
+                                <span class="kpi-value" id="totalRevenue">—</span>
+                            </div>
                         </div>
                     </div>
-                    <div class="stat-card stat-danger">
-                        <div class="stat-icon">🔴</div>
-                        <div class="stat-details">
-                            <h3 id="occupiedRooms">0</h3>
-                            <p>Occupied</p>
+
+                    <div class="dashboard-grid">
+                        <div class="card">
+                            <div class="card-header">
+                                <h2 class="card-title">Occupancy Rate</h2>
+                            </div>
+                            <div class="donut-wrap">
+                                <svg class="donut" viewBox="0 0 120 120">
+                                    <circle class="donut-track" cx="60" cy="60" r="46"/>
+                                    <circle class="donut-fill" id="donutFill" cx="60" cy="60" r="46" stroke-dasharray="0 289"/>
+                                </svg>
+                                <div class="donut-label">
+                                    <span id="occupancyPct">0%</span>
+                                    <span>Occupied</span>
+                                </div>
+                            </div>
+                            <div class="donut-legend">
+                                <span class="legend-dot legend-red"></span> Occupied
+                                <span class="legend-dot legend-green" style="margin-left:16px"></span> Available
+                            </div>
                         </div>
-                    </div>
-                    <div class="stat-card stat-success">
-                        <div class="stat-icon">🟢</div>
-                        <div class="stat-details">
-                            <h3 id="availableRooms">0</h3>
-                            <p>Available</p>
-                        </div>
-                    </div>
-                    <div class="stat-card stat-warning">
-                        <div class="stat-icon">💰</div>
-                        <div class="stat-details">
-                            <h3 id="totalRevenue">$0</h3>
-                            <p>Total Revenue</p>
+
+                        <div class="card" style="grid-column: span 2;">
+                            <div class="card-header">
+                                <h2 class="card-title">Recent Bookings</h2>
+                                <button class="btn btn-sm btn-ghost" onclick="switchTab('bookings')">View all</button>
+                            </div>
+                            <div id="recentBookings"></div>
                         </div>
                     </div>
                 </div>
 
-                <div class="content-section">
-                    <h2>Recent Bookings</h2>
-                    <div id="recentBookings" class="table-container"></div>
-                </div>
-            </div>
+                <!-- Rooms -->
+                <div id="rooms" class="tab-content">
+                    <div class="page-header">
+                        <div>
+                            <h1 class="page-title">Room Management</h1>
+                            <p class="page-subtitle">Manage hotel rooms and their availability</p>
+                        </div>
+                        <button class="btn btn-primary" onclick="openModal('addRoomModal')">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                            Add Room
+                        </button>
+                    </div>
 
-            <!-- Rooms Tab -->
-            <div id="rooms" class="tab-content">
-                <div class="content-header">
-                    <h1>Room Management</h1>
-                </div>
+                    <div class="filter-bar">
+                        <button class="filter-btn active" data-filter="all" onclick="filterRoomCards(this, 'all')">All</button>
+                        <button class="filter-btn" data-filter="available" onclick="filterRoomCards(this, 'available')">Available</button>
+                        <button class="filter-btn" data-filter="occupied" onclick="filterRoomCards(this, 'occupied')">Occupied</button>
+                        <button class="filter-btn" data-filter="maintenance" onclick="filterRoomCards(this, 'maintenance')">Maintenance</button>
+                    </div>
 
-                <div class="form-card">
-                    <h3>Add New Room</h3>
-                    <form id="addRoomForm" class="form-grid">
-                        <div class="form-group">
-                            <label>Room Number *</label>
-                            <input type="text" id="roomNumber" required>
-                        </div>
-                        <div class="form-group">
-                            <label>Room Type *</label>
-                            <select id="roomType" required>
-                                <option value="Single">Single</option>
-                                <option value="Double">Double</option>
-                                <option value="Suite">Suite</option>
-                                <option value="Deluxe">Deluxe</option>
-                                <option value="Presidential">Presidential Suite</option>
-                            </select>
-                        </div>
-                        <div class="form-group">
-                            <label>Price per Night ($) *</label>
-                            <input type="number" id="roomPrice" step="0.01" required>
-                        </div>
-                        <div class="form-group">
-                            <label>Floor *</label>
-                            <input type="number" id="roomFloor" required>
-                        </div>
-                        <div class="form-group">
-                            <button type="submit" class="btn btn-primary">Add Room</button>
-                        </div>
-                    </form>
-                </div>
-
-                <div class="content-section">
-                    <h2>All Rooms</h2>
                     <div id="roomsGrid" class="room-grid"></div>
                 </div>
-            </div>
 
-            <!-- Bookings Tab -->
-            <div id="bookings" class="tab-content">
-                <div class="content-header">
-                    <h1>Booking Management</h1>
-                </div>
-
-                <div class="form-card">
-                    <h3>Create New Booking</h3>
-                    <form id="addBookingForm" class="form-grid">
-                        <div class="form-group">
-                            <label>Guest Name *</label>
-                            <input type="text" id="bookingGuestName" required>
+                <!-- Bookings -->
+                <div id="bookings" class="tab-content">
+                    <div class="page-header">
+                        <div>
+                            <h1 class="page-title">Booking Management</h1>
+                            <p class="page-subtitle">View and manage all reservations</p>
                         </div>
-                        <div class="form-group">
-                            <label>Email *</label>
-                            <input type="email" id="bookingEmail" required>
-                        </div>
-                        <div class="form-group">
-                            <label>Phone *</label>
-                            <input type="tel" id="bookingPhone" required>
-                        </div>
-                        <div class="form-group">
-                            <label>Room *</label>
-                            <select id="bookingRoom" required></select>
-                        </div>
-                        <div class="form-group">
-                            <label>Check-in Date *</label>
-                            <input type="date" id="checkInDate" required>
-                        </div>
-                        <div class="form-group">
-                            <label>Check-out Date *</label>
-                            <input type="date" id="checkOutDate" required>
-                        </div>
-                        <div class="form-group">
-                            <label>Number of Guests</label>
-                            <input type="number" id="numGuests" value="1" min="1">
-                        </div>
-                        <div class="form-group full-width">
-                            <label>Special Requests</label>
-                            <textarea id="specialRequests" rows="2"></textarea>
-                        </div>
-                        <div class="form-group">
-                            <button type="submit" class="btn btn-primary">Create Booking</button>
-                        </div>
-                    </form>
-                </div>
-
-                <div class="content-section">
-                    <h2>All Bookings</h2>
-                    <div class="search-box">
-                        <input type="text" id="searchBooking" placeholder="🔍 Search bookings...">
-                    </div>
-                    <div id="bookingsTable" class="table-container"></div>
-                </div>
-            </div>
-
-            <!-- Guests Tab -->
-            <div id="guests" class="tab-content">
-                <div class="content-header">
-                    <h1>Guest Management</h1>
-                </div>
-
-                <div class="content-section">
-                    <div class="search-box">
-                        <input type="text" id="searchGuest" placeholder="🔍 Search guests...">
-                    </div>
-                    <div id="guestsTable" class="table-container"></div>
-                </div>
-            </div>
-
-            <!-- Billing Tab -->
-            <div id="billing" class="tab-content">
-                <div class="content-header">
-                    <h1>Billing & Payments</h1>
-                </div>
-
-                <div class="form-card">
-                    <h3>Process Payment</h3>
-                    <div class="form-group">
-                        <label>Select Booking</label>
-                        <select id="billingBooking"></select>
-                    </div>
-                    <div id="billingDetails"></div>
-                </div>
-
-                <div class="content-section">
-                    <h2>Payment History</h2>
-                    <div id="paymentsTable" class="table-container"></div>
-                </div>
-            </div>
-
-            <!-- Reports Tab -->
-            <div id="reports" class="tab-content">
-                <div class="content-header">
-                    <h1>Reports & Analytics</h1>
-                </div>
-
-                <div class="stats-grid">
-                    <div class="stat-card stat-info">
-                        <div class="stat-icon">📋</div>
-                        <div class="stat-details">
-                            <h3 id="totalBookings">0</h3>
-                            <p>Total Bookings</p>
-                        </div>
-                    </div>
-                    <div class="stat-card stat-success">
-                        <div class="stat-icon">📊</div>
-                        <div class="stat-details">
-                            <h3 id="occupancyRate">0%</h3>
-                            <p>Occupancy Rate</p>
-                        </div>
-                    </div>
-                    <div class="stat-card stat-warning">
-                        <div class="stat-icon">💵</div>
-                        <div class="stat-details">
-                            <h3 id="avgRoomRate">$0</h3>
-                            <p>Avg Room Rate</p>
-                        </div>
-                    </div>
-                    <div class="stat-card stat-primary">
-                        <div class="stat-icon">👤</div>
-                        <div class="stat-details">
-                            <h3 id="totalGuests">0</h3>
-                            <p>Total Guests</p>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="content-section">
-                    <h2>Data Management</h2>
-                    <div class="action-buttons">
-                        <button class="btn btn-info" onclick="alert('Use File > Backup Database from menu')">
-                            💾 Backup Database
-                        </button>
-                        <button class="btn btn-warning" onclick="alert('Use File > Restore Database from menu')">
-                            📂 Restore Database
+                        <button class="btn btn-primary" onclick="openModal('addBookingModal')">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                            New Booking
                         </button>
                     </div>
-                </div>
-            </div>
 
-            <!-- Settings Tab -->
-            <div id="settings" class="tab-content">
-                <div class="content-header">
-                    <h1>Settings</h1>
+                    <div class="card">
+                        <div class="card-header">
+                            <h2 class="card-title">All Bookings</h2>
+                            <div class="search-box">
+                                <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                                <input type="text" id="searchBooking" placeholder="Search bookings...">
+                            </div>
+                        </div>
+                        <div id="bookingsTable"></div>
+                    </div>
                 </div>
 
-                <div class="form-card">
-                    <h3>Hotel Information</h3>
-                    <form id="settingsForm" class="form-grid">
-                        <div class="form-group">
-                            <label>Hotel Name</label>
-                            <input type="text" id="hotelName">
+                <!-- Guests -->
+                <div id="guests" class="tab-content">
+                    <div class="page-header">
+                        <div>
+                            <h1 class="page-title">Guest Management</h1>
+                            <p class="page-subtitle">Directory of all registered guests</p>
                         </div>
-                        <div class="form-group">
-                            <label>Address</label>
-                            <input type="text" id="hotelAddress">
+                    </div>
+
+                    <div class="card">
+                        <div class="card-header">
+                            <h2 class="card-title">All Guests</h2>
+                            <div class="search-box">
+                                <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                                <input type="text" id="searchGuest" placeholder="Search guests...">
+                            </div>
                         </div>
-                        <div class="form-group">
-                            <label>Phone</label>
-                            <input type="tel" id="hotelPhone">
-                        </div>
-                        <div class="form-group">
-                            <label>Email</label>
-                            <input type="email" id="hotelEmail">
-                        </div>
-                        <div class="form-group">
-                            <label>Tax Rate (%)</label>
-                            <input type="number" id="taxRate" step="0.1">
-                        </div>
-                        <div class="form-group">
-                            <label>Currency</label>
-                            <select id="currency">
-                                <option value="USD">USD ($)</option>
-                                <option value="EUR">EUR (€)</option>
-                                <option value="GBP">GBP (£)</option>
-                            </select>
-                        </div>
-                        <div class="form-group">
-                            <button type="submit" class="btn btn-primary">Save Settings</button>
-                        </div>
-                    </form>
+                        <div id="guestsTable"></div>
+                    </div>
                 </div>
-            </div>
+
+                <!-- Billing -->
+                <div id="billing" class="tab-content">
+                    <div class="page-header">
+                        <div>
+                            <h1 class="page-title">Billing & Payments</h1>
+                            <p class="page-subtitle">Process payments and view transaction history</p>
+                        </div>
+                    </div>
+
+                    <div class="dashboard-grid">
+                        <div class="card">
+                            <div class="card-header"><h2 class="card-title">Process Payment</h2></div>
+                            <div class="form-group">
+                                <label class="form-label">Select Booking</label>
+                                <select class="form-control" id="billingBooking"></select>
+                            </div>
+                            <div id="billingDetails"></div>
+                        </div>
+
+                        <div class="card" style="grid-column: span 2;">
+                            <div class="card-header"><h2 class="card-title">Payment History</h2></div>
+                            <div id="paymentsTable"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Reports -->
+                <div id="reports" class="tab-content">
+                    <div class="page-header">
+                        <div>
+                            <h1 class="page-title">Reports & Analytics</h1>
+                            <p class="page-subtitle">Hotel performance overview</p>
+                        </div>
+                    </div>
+
+                    <div class="kpi-grid">
+                        <div class="kpi-card kpi-blue">
+                            <div class="kpi-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg></div>
+                            <div class="kpi-body"><span class="kpi-label">Total Bookings</span><span class="kpi-value" id="totalBookings">—</span></div>
+                        </div>
+                        <div class="kpi-card kpi-green">
+                            <div class="kpi-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg></div>
+                            <div class="kpi-body"><span class="kpi-label">Occupancy Rate</span><span class="kpi-value" id="occupancyRate">—</span></div>
+                        </div>
+                        <div class="kpi-card kpi-amber">
+                            <div class="kpi-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg></div>
+                            <div class="kpi-body"><span class="kpi-label">Avg Room Rate</span><span class="kpi-value" id="avgRoomRate">—</span></div>
+                        </div>
+                        <div class="kpi-card kpi-purple">
+                            <div class="kpi-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/></svg></div>
+                            <div class="kpi-body"><span class="kpi-label">Total Guests</span><span class="kpi-value" id="totalGuests">—</span></div>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <div class="card-header"><h2 class="card-title">Data Management</h2></div>
+                        <div style="display:flex;gap:12px;flex-wrap:wrap;padding:8px 0;">
+                            <button class="btn btn-secondary" onclick="alert('Use File > Backup Database from menu')">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                                Backup Database
+                            </button>
+                            <button class="btn btn-secondary" onclick="alert('Use File > Restore Database from menu')">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                                Restore Database
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Settings -->
+                <div id="settings" class="tab-content">
+                    <div class="page-header">
+                        <div>
+                            <h1 class="page-title">Settings</h1>
+                            <p class="page-subtitle">Configure hotel information and preferences</p>
+                        </div>
+                    </div>
+
+                    <div class="card" style="max-width:700px;">
+                        <div class="card-header"><h2 class="card-title">Hotel Information</h2></div>
+                        <form id="settingsForm" class="settings-form">
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label class="form-label">Hotel Name</label>
+                                    <input class="form-control" type="text" id="hotelName">
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">Phone</label>
+                                    <input class="form-control" type="tel" id="hotelPhone">
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Address</label>
+                                <input class="form-control" type="text" id="hotelAddress">
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label class="form-label">Email</label>
+                                    <input class="form-control" type="email" id="hotelEmail">
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">Tax Rate (%)</label>
+                                    <input class="form-control" type="number" id="taxRate" step="0.1">
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Currency</label>
+                                <select class="form-control" id="currency">
+                                    <option value="USD">USD ($)</option>
+                                    <option value="EUR">EUR (€)</option>
+                                    <option value="GBP">GBP (£)</option>
+                                    <option value="INR">INR (₹)</option>
+                                </select>
+                            </div>
+                            <button type="submit" class="btn btn-primary" style="margin-top:8px;">Save Settings</button>
+                        </form>
+                    </div>
+                </div>
+
+            </main>
         </div>
     </div>
 
-    <div id="notification" class="notification"></div>
+    <!-- Modal: Add Room -->
+    <div class="modal-overlay" id="addRoomModal">
+        <div class="modal">
+            <div class="modal-header">
+                <h3>Add New Room</h3>
+                <button class="modal-close" onclick="closeModal('addRoomModal')">&times;</button>
+            </div>
+            <form id="addRoomForm">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">Room Number *</label>
+                        <input class="form-control" type="text" id="roomNumber" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Floor *</label>
+                        <input class="form-control" type="number" id="roomFloor" required>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">Room Type *</label>
+                        <select class="form-control" id="roomType" required>
+                            <option value="Single">Single</option>
+                            <option value="Double">Double</option>
+                            <option value="Suite">Suite</option>
+                            <option value="Deluxe">Deluxe</option>
+                            <option value="Presidential">Presidential Suite</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Price per Night ($) *</label>
+                        <input class="form-control" type="number" id="roomPrice" step="0.01" required>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-ghost" onclick="closeModal('addRoomModal')">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Add Room</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal: Add Booking -->
+    <div class="modal-overlay" id="addBookingModal">
+        <div class="modal modal-lg">
+            <div class="modal-header">
+                <h3>Create New Booking</h3>
+                <button class="modal-close" onclick="closeModal('addBookingModal')">&times;</button>
+            </div>
+            <form id="addBookingForm">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">Guest Name *</label>
+                        <input class="form-control" type="text" id="bookingGuestName" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Email *</label>
+                        <input class="form-control" type="email" id="bookingEmail" required>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">Phone *</label>
+                        <input class="form-control" type="tel" id="bookingPhone" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Room *</label>
+                        <select class="form-control" id="bookingRoom" required></select>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">Check-in Date *</label>
+                        <input class="form-control" type="date" id="checkInDate" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Check-out Date *</label>
+                        <input class="form-control" type="date" id="checkOutDate" required>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">Number of Guests</label>
+                        <input class="form-control" type="number" id="numGuests" value="1" min="1">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Special Requests</label>
+                        <input class="form-control" type="text" id="specialRequests">
+                    </div>
+                </div>
+                <div id="bookingSummary" class="booking-summary" style="display:none;"></div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-ghost" onclick="closeModal('addBookingModal')">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Confirm Booking</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Toast Notification -->
+    <div id="toastContainer" class="toast-container"></div>
 
     <script src="app.js"></script>
 </body>
