@@ -17,7 +17,10 @@
     "desktop",
     "electron"
   ],
-  "author": "Richmond Hotel",
+  "author": {
+    "name": "Richmond Hotel",
+    "email": "admin@richmondhotel.com"
+  },
   "license": "MIT",
   "devDependencies": {
     "electron": "^28.0.0",
@@ -45,16 +48,14 @@
           "target": "nsis",
           "arch": ["x64"]
         }
-      ],
-      "icon": "assets/icon.ico"
+      ]
     },
     "mac": {
       "target": "dmg",
-      "icon": "assets/icon.icns"
+      "identity": null
     },
     "linux": {
       "target": ["AppImage", "deb"],
-      "icon": "assets/icon.png",
       "category": "Office"
     },
     "nsis": {
