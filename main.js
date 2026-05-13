@@ -1,10 +1,52 @@
-const { app, BrowserWindow, ipcMain, dialog, Menu } = require('electron');
+const { app, BrowserWindow, ipcMain, dialog, Menu, session } = require('electron');
 const path = require('path');
 const Database = require('better-sqlite3');
 const fs = require('fs');
 
 let mainWindow;
 let db;
+
+// ── Whitelists for update handlers (prevents SQL injection via column names) ──
+const ALLOWED_ROOM_UPDATE_FIELDS    = new Set(['status', 'price', 'type', 'floor', 'number']);
+const ALLOWED_BOOKING_UPDATE_FIELDS = new Set(['status', 'paid_amount', 'special_requests', 'check_out']);
+const ALLOWED_GUEST_UPDATE_FIELDS   = new Set(['name', 'phone', 'address', 'total_bookings', 'total_spent']);
+
+// ── Input validators ──────────────────────────────────────────────────────────
+const ROOM_STATUSES    = new Set(['available', 'occupied', 'maintenance']);
+const BOOKING_STATUSES = new Set(['confirmed', 'completed', 'cancelled']);
+const VALID_METHODS    = new Set(['Cash', 'Card', 'Bank Transfer', 'Online']);
+
+function assertString(val, max = 255) {
+    if (typeof val !== 'string') throw new Error('Expected string');
+    if (val.length > max) throw new Error(`Value exceeds max length ${max}`);
+    return val.trim();
+}
+
+function assertPositiveNumber(val) {
+    const n = Number(val);
+    if (!Number.isFinite(n) || n <= 0) throw new Error('Expected positive number');
+    return n;
+}
+
+function assertInt(val) {
+    const n = parseInt(val, 10);
+    if (!Number.isInteger(n)) throw new Error('Expected integer');
+    return n;
+}
+
+function assertDate(val) {
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(val)) throw new Error('Expected YYYY-MM-DD date');
+    return val;
+}
+
+function sanitizeUpdateFields(updates, allowedSet) {
+    const keys = Object.keys(updates);
+    for (const key of keys) {
+        if (!allowedSet.has(key)) throw new Error(`Forbidden field: ${key}`);
+    }
+    if (keys.length === 0) throw new Error('No fields to update');
+    return updates;
+}
 
 // Database initialization
 function initDatabase() {
@@ -94,11 +136,32 @@ function createWindow() {
         webPreferences: {
             nodeIntegration: false,
             contextIsolation: true,
-            preload: path.join(__dirname, 'preload.js')
+            sandbox: true,
+            webSecurity: true,
+            preload: path.join(__dirname, 'preload.js'),
         },
-        icon: path.join(__dirname, 'assets', 'icon.png'),
-        title: 'Richmond Hotel Management System'
+        title: 'Richmond Hotel Management System',
     });
+
+    // Content Security Policy — no inline scripts allowed from remote origins
+    session.defaultSession.webRequest.onHeadersReceived((details, callback) => {
+        callback({
+            responseHeaders: {
+                ...details.responseHeaders,
+                'Content-Security-Policy': [
+                    "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'none';"
+                ],
+            },
+        });
+    });
+
+    // Block navigation to any external URL
+    mainWindow.webContents.on('will-navigate', (event, url) => {
+        if (!url.startsWith('file://')) event.preventDefault();
+    });
+
+    // Block new windows / popups
+    mainWindow.webContents.setWindowOpenHandler(() => ({ action: 'deny' }));
 
     mainWindow.loadFile('renderer/index.html');
 
@@ -203,9 +266,11 @@ async function restoreDatabase() {
         });
 
         if (result.response === 1) {
+            const srcPath = path.resolve(filePaths[0]);
+            if (!srcPath.endsWith('.db')) throw new Error('Invalid file type for restore');
             const dbPath = path.join(app.getPath('userData'), 'richmond-hotel.db');
             db.close();
-            fs.copyFileSync(filePaths[0], dbPath);
+            fs.copyFileSync(srcPath, dbPath);
             db = new Database(dbPath);
             mainWindow.reload();
             dialog.showMessageBox({
@@ -225,16 +290,22 @@ ipcMain.handle('get-rooms', () => {
 });
 
 ipcMain.handle('add-room', (event, room) => {
+    const number = assertString(room.number, 10);
+    const type   = assertString(room.type, 50);
+    const price  = assertPositiveNumber(room.price);
+    const floor  = assertInt(room.floor);
+    const status = ROOM_STATUSES.has(room.status) ? room.status : 'available';
     const stmt = db.prepare('INSERT INTO rooms (number, type, price, floor, status) VALUES (?, ?, ?, ?, ?)');
-    const info = stmt.run(room.number, room.type, room.price, room.floor, room.status || 'available');
+    const info = stmt.run(number, type, price, floor, status);
     return { success: true, id: info.lastInsertRowid };
 });
 
 ipcMain.handle('update-room', (event, id, updates) => {
+    sanitizeUpdateFields(updates, ALLOWED_ROOM_UPDATE_FIELDS);
+    if (updates.status && !ROOM_STATUSES.has(updates.status)) throw new Error('Invalid status');
     const fields = Object.keys(updates).map(key => `${key} = ?`).join(', ');
-    const values = Object.values(updates);
     const stmt = db.prepare(`UPDATE rooms SET ${fields} WHERE id = ?`);
-    stmt.run(...values, id);
+    stmt.run(...Object.values(updates), assertInt(id));
     return { success: true };
 });
 
@@ -250,16 +321,20 @@ ipcMain.handle('get-guests', () => {
 });
 
 ipcMain.handle('add-guest', (event, guest) => {
+    const name  = assertString(guest.name, 150);
+    const email = assertString(guest.email, 255);
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) throw new Error('Invalid email');
+    const phone = assertString(guest.phone, 30);
     const stmt = db.prepare('INSERT INTO guests (name, email, phone, address, id_number) VALUES (?, ?, ?, ?, ?)');
-    const info = stmt.run(guest.name, guest.email, guest.phone, guest.address || '', guest.id_number || '');
+    const info = stmt.run(name, email, phone, (guest.address || '').slice(0, 255), (guest.id_number || '').slice(0, 50));
     return { success: true, id: info.lastInsertRowid };
 });
 
 ipcMain.handle('update-guest', (event, id, updates) => {
+    sanitizeUpdateFields(updates, ALLOWED_GUEST_UPDATE_FIELDS);
     const fields = Object.keys(updates).map(key => `${key} = ?`).join(', ');
-    const values = Object.values(updates);
     const stmt = db.prepare(`UPDATE guests SET ${fields} WHERE id = ?`);
-    stmt.run(...values, id);
+    stmt.run(...Object.values(updates), assertInt(id));
     return { success: true };
 });
 
@@ -308,10 +383,11 @@ ipcMain.handle('add-booking', (event, booking) => {
 });
 
 ipcMain.handle('update-booking', (event, id, updates) => {
+    sanitizeUpdateFields(updates, ALLOWED_BOOKING_UPDATE_FIELDS);
+    if (updates.status && !BOOKING_STATUSES.has(updates.status)) throw new Error('Invalid status');
     const fields = Object.keys(updates).map(key => `${key} = ?`).join(', ');
-    const values = Object.values(updates);
     const stmt = db.prepare(`UPDATE bookings SET ${fields} WHERE id = ?`);
-    stmt.run(...values, id);
+    stmt.run(...Object.values(updates), assertInt(id));
     return { success: true };
 });
 
@@ -331,17 +407,13 @@ ipcMain.handle('get-payments', () => {
 });
 
 ipcMain.handle('add-payment', (event, payment) => {
-    const stmt = db.prepare(`
-        INSERT INTO payments (booking_id, amount, payment_method, payment_date, notes)
-        VALUES (?, ?, ?, ?, ?)
-    `);
-    const info = stmt.run(
-        payment.booking_id,
-        payment.amount,
-        payment.payment_method,
-        payment.payment_date,
-        payment.notes || ''
-    );
+    const bookingId = assertInt(payment.booking_id);
+    const amount    = assertPositiveNumber(payment.amount);
+    const method    = VALID_METHODS.has(payment.payment_method) ? payment.payment_method : 'Cash';
+    const date      = assertDate(payment.payment_date);
+    const notes     = (payment.notes || '').slice(0, 500);
+    const stmt = db.prepare('INSERT INTO payments (booking_id, amount, payment_method, payment_date, notes) VALUES (?, ?, ?, ?, ?)');
+    const info = stmt.run(bookingId, amount, method, date, notes);
     return { success: true, id: info.lastInsertRowid };
 });
 

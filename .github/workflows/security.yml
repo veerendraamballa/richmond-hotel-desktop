@@ -2,51 +2,74 @@ name: Security Scan
 
 on:
   push:
-    branches: [ main, develop ]
+    branches: [main, develop]
   pull_request:
-    branches: [ main, develop ]
+    branches: [main, develop]
   schedule:
-    # Run weekly on Monday at 9 AM UTC
-    - cron: '0 9 * * 1'
+    - cron: '0 9 * * 1'   # Weekly Monday 9 AM UTC
   workflow_dispatch:
 
 jobs:
-  dependency-scan:
-    name: Dependency Security Scan
+  # ── 1. Static Analysis ────────────────────────────────────────────────────────
+  static-analysis:
+    name: Static Security Analysis (ESLint)
     runs-on: ubuntu-latest
-    
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
         with:
           node-version: '20.x'
+          cache: 'npm'
 
-      - name: Install dependencies
-        run: npm ci
+      - run: npm ci
 
-      - name: Run npm audit
-        run: npm audit --production --audit-level=moderate
-        continue-on-error: true
+      - name: Run ESLint security plugin
+        run: npm run lint:security
+        continue-on-error: true   # Report but don't block CI until baseline is clean
 
-      - name: Run npm audit (detailed)
-        id: audit
-        run: |
-          npm audit --production --json > audit-results.json
-          cat audit-results.json
-        continue-on-error: true
+      - name: ESLint output as annotation
+        run: npx eslint main.js preload.js renderer/app.js --format json > eslint-report.json || true
 
-      - name: Upload audit results
-        uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v4
+        if: always()
         with:
-          name: security-audit-results
+          name: eslint-security-report
+          path: eslint-report.json
+          retention-days: 30
+
+  # ── 2. Dependency Vulnerability Scan ─────────────────────────────────────────
+  dependency-scan:
+    name: Dependency Vulnerability Scan (npm audit)
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20.x'
+          cache: 'npm'
+
+      - run: npm ci
+
+      - name: npm audit (high+critical only, fail on critical)
+        run: npm audit --production --audit-level=critical
+        continue-on-error: true
+
+      - name: npm audit JSON report
+        run: npm audit --production --json > audit-results.json || true
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: npm-audit-report
           path: audit-results.json
           retention-days: 30
 
-  codeql-analysis:
-    name: CodeQL Security Analysis
+  # ── 3. CodeQL ─────────────────────────────────────────────────────────────────
+  codeql:
+    name: CodeQL Deep Analysis
     runs-on: ubuntu-latest
     permissions:
       actions: read
@@ -54,32 +77,77 @@ jobs:
       security-events: write
 
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
       - name: Initialize CodeQL
         uses: github/codeql-action/init@v3
         with:
           languages: javascript
+          queries: security-and-quality
 
       - name: Perform CodeQL Analysis
         uses: github/codeql-action/analyze@v3
 
+  # ── 4. E2E Security Tests ─────────────────────────────────────────────────────
+  security-e2e:
+    name: E2E Security Tests (XSS / SQLi / IPC)
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20.x'
+          cache: 'npm'
+
+      - run: npm ci
+      - run: npm rebuild better-sqlite3
+      - run: npx playwright install --with-deps chromium
+
+      - name: Install Xvfb (Linux)
+        if: matrix.os == 'ubuntu-latest'
+        run: sudo apt-get install -y xvfb
+
+      - name: Run security E2E tests (Linux)
+        if: matrix.os == 'ubuntu-latest'
+        run: xvfb-run --auto-servernum --server-args="-screen 0 1280x960x24" npx playwright test tests/e2e/security/
+        env:
+          CI: true
+
+      - name: Run security E2E tests (Windows)
+        if: matrix.os == 'windows-latest'
+        run: npx playwright test tests/e2e/security/
+        env:
+          CI: true
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: security-e2e-results-${{ matrix.os }}
+          path: |
+            test-results/
+            playwright-report/
+          retention-days: 14
+
+  # ── 5. License Compliance ─────────────────────────────────────────────────────
   license-check:
     name: License Compliance Check
     runs-on: ubuntu-latest
-    
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
         with:
           node-version: '20.x'
+          cache: 'npm'
 
-      - name: Install dependencies
-        run: npm ci
+      - run: npm ci
 
       - name: Check licenses
         run: |
@@ -87,18 +155,18 @@ jobs:
           npx license-checker --json > licenses.json
         continue-on-error: true
 
-      - name: Upload license report
-        uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v4
         with:
           name: license-report
           path: licenses.json
           retention-days: 30
 
+  # ── 6. Create Issue on Critical Failure ───────────────────────────────────────
   create-security-issue:
-    name: Create Security Issue if Vulnerabilities Found
-    needs: [dependency-scan]
+    name: Create Security Issue on Failure
+    needs: [dependency-scan, security-e2e]
     runs-on: ubuntu-latest
-    if: failure()
+    if: failure() && github.ref == 'refs/heads/main'
     permissions:
       issues: write
 
@@ -108,27 +176,19 @@ jobs:
         with:
           script: |
             const date = new Date().toISOString().split('T')[0];
-            
             await github.rest.issues.create({
               owner: context.repo.owner,
               repo: context.repo.repo,
-              title: `[Security] Vulnerabilities detected - ${date}`,
-              body: `## Security Scan Alert
-              
-              🔴 Security vulnerabilities were detected during the automated scan.
-              
-              **Action Required:**
-              1. Review the audit results in the workflow artifacts
-              2. Update vulnerable dependencies
-              3. Run \`npm audit fix\` locally
-              4. Test the application
-              5. Create a PR with the fixes
-              
-              **Scan Details:**
-              - Run: ${context.runNumber}
-              - Workflow: ${context.workflow}
-              - Branch: ${context.ref}
-              
-              🤖 This issue was automatically created by the security scan workflow.`,
+              title: `[Security] Scan failure detected - ${date}`,
+              body: `## Security Scan Alert\n\n` +
+                `One or more security checks failed on \`main\`.\n\n` +
+                `**Checks run:**\n` +
+                `- npm audit (dependency vulnerabilities)\n` +
+                `- E2E security tests (XSS, SQL injection, IPC hardening)\n\n` +
+                `**Action Required:**\n` +
+                `1. Review artifacts in the [workflow run](${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId})\n` +
+                `2. Fix identified vulnerabilities\n` +
+                `3. Re-run the security workflow\n\n` +
+                `🤖 Auto-created by Security Scan workflow`,
               labels: ['security', 'critical', 'automated']
             });

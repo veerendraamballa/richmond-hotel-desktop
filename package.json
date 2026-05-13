@@ -12,7 +12,8 @@
     "build:linux": "electron-builder --linux",
     "test:e2e": "playwright test",
     "test:e2e:headed": "playwright test --headed",
-    "test:e2e:report": "playwright show-report"
+    "test:e2e:report": "playwright show-report",
+    "lint:security": "eslint main.js preload.js renderer/app.js"
   },
   "keywords": [
     "hotel",
@@ -29,6 +30,8 @@
     "@playwright/test": "^1.60.0",
     "electron": "^28.0.0",
     "electron-builder": "^24.9.1",
+    "eslint": "^10.3.0",
+    "eslint-plugin-security": "^4.0.0",
     "playwright": "^1.60.0"
   },
   "dependencies": {

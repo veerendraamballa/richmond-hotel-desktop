@@ -124,11 +124,11 @@ async function loadDashboard() {
                 <tbody>
                     ${recent.map(b => `
                         <tr>
-                            <td class="table-primary">${b.booking_ref}</td>
-                            <td>${b.guest_name}</td>
-                            <td>${b.room_number}</td>
-                            <td>${formatDate(b.check_in)}</td>
-                            <td>${formatDate(b.check_out)}</td>
+                            <td class="table-primary">${esc(b.booking_ref)}</td>
+                            <td>${esc(b.guest_name)}</td>
+                            <td>${esc(b.room_number)}</td>
+                            <td>${esc(formatDate(b.check_in))}</td>
+                            <td>${esc(formatDate(b.check_out))}</td>
                             <td>${badge(b.status)}</td>
                         </tr>
                     `).join('')}
@@ -198,12 +198,12 @@ function renderRooms(filterStatus = null) {
     grid.innerHTML = filtered.map(r => `
         <div class="room-card">
             <div class="room-card-header">
-                <span class="room-number">Room ${r.number}</span>
-                <span class="room-type-tag">${r.type}</span>
+                <span class="room-number">Room ${esc(r.number)}</span>
+                <span class="room-type-tag">${esc(r.type)}</span>
             </div>
             <div class="room-meta">
-                <div class="room-meta-row"><span>Price</span><strong>$${r.price}/night</strong></div>
-                <div class="room-meta-row"><span>Floor</span><strong>${r.floor}</strong></div>
+                <div class="room-meta-row"><span>Price</span><strong>$${esc(r.price)}/night</strong></div>
+                <div class="room-meta-row"><span>Floor</span><strong>${esc(r.floor)}</strong></div>
             </div>
             <div class="room-card-footer">
                 ${badge(r.status)}
@@ -340,12 +340,12 @@ function renderBookings() {
             <tbody>
                 ${filtered.map(b => `
                     <tr>
-                        <td class="table-primary">${b.booking_ref}</td>
-                        <td>${b.guest_name}</td>
-                        <td>${b.room_number} <span class="table-muted">${b.room_type}</span></td>
-                        <td>${formatDate(b.check_in)}</td>
-                        <td>${formatDate(b.check_out)}</td>
-                        <td>${b.nights}</td>
+                        <td class="table-primary">${esc(b.booking_ref)}</td>
+                        <td>${esc(b.guest_name)}</td>
+                        <td>${esc(b.room_number)} <span class="table-muted">${esc(b.room_type)}</span></td>
+                        <td>${esc(formatDate(b.check_in))}</td>
+                        <td>${esc(formatDate(b.check_out))}</td>
+                        <td>${esc(b.nights)}</td>
                         <td>$${parseFloat(b.total_amount).toFixed(2)}</td>
                         <td>${badge(b.status)}</td>
                         <td>${b.status === 'confirmed'
@@ -391,10 +391,10 @@ function renderGuests() {
             <tbody>
                 ${filtered.map(g => `
                     <tr>
-                        <td class="table-primary">${g.name}</td>
-                        <td>${g.email}</td>
-                        <td>${g.phone}</td>
-                        <td>${g.total_bookings || 0}</td>
+                        <td class="table-primary">${esc(g.name)}</td>
+                        <td>${esc(g.email)}</td>
+                        <td>${esc(g.phone)}</td>
+                        <td>${esc(g.total_bookings || 0)}</td>
                         <td>$${parseFloat(g.total_spent || 0).toFixed(2)}</td>
                     </tr>
                 `).join('')}
@@ -424,9 +424,9 @@ function renderBillingDetails() {
     const due = (parseFloat(b.total_amount) - parseFloat(b.paid_amount)).toFixed(2);
     el.innerHTML = `
         <div class="billing-breakdown">
-            <div class="billing-row"><span>Guest</span><span>${b.guest_name}</span></div>
-            <div class="billing-row"><span>Room</span><span>${b.room_number} (${b.room_type})</span></div>
-            <div class="billing-row"><span>Nights</span><span>${b.nights}</span></div>
+            <div class="billing-row"><span>Guest</span><span>${esc(b.guest_name)}</span></div>
+            <div class="billing-row"><span>Room</span><span>${esc(b.room_number)} (${esc(b.room_type)})</span></div>
+            <div class="billing-row"><span>Nights</span><span>${esc(b.nights)}</span></div>
             <div class="billing-row"><span>Total Amount</span><span>$${parseFloat(b.total_amount).toFixed(2)}</span></div>
             <div class="billing-row"><span>Paid</span><span>$${parseFloat(b.paid_amount).toFixed(2)}</span></div>
             <div class="billing-row total"><span>Amount Due</span><span>$${due}</span></div>
@@ -478,11 +478,11 @@ function renderPayments() {
             <tbody>
                 ${payments.map(p => `
                     <tr>
-                        <td>${formatDate(p.payment_date)}</td>
-                        <td class="table-primary">${p.booking_ref}</td>
-                        <td>${p.guest_name}</td>
+                        <td>${esc(formatDate(p.payment_date))}</td>
+                        <td class="table-primary">${esc(p.booking_ref)}</td>
+                        <td>${esc(p.guest_name)}</td>
                         <td>$${parseFloat(p.amount).toFixed(2)}</td>
-                        <td>${p.payment_method}</td>
+                        <td>${esc(p.payment_method)}</td>
                         <td>${badge('paid')}</td>
                     </tr>
                 `).join('')}
@@ -529,6 +529,19 @@ async function handleSaveSettings(e) {
         settings = await window.electronAPI.getSettings();
         showToast('Settings saved successfully', 'success');
     } catch { showToast('Error saving settings', 'error'); }
+}
+
+// ── Security helpers ──────────────────────────────────────────────────────────
+
+/** Escape HTML special chars to prevent XSS when rendering data via innerHTML */
+function esc(str) {
+    if (str === null || str === undefined) return '';
+    return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#x27;');
 }
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
