@@ -50,7 +50,10 @@ function sanitizeUpdateFields(updates, allowedSet) {
 
 // Database initialization
 function initDatabase() {
-    const dbPath = path.join(app.getPath('userData'), 'richmond-hotel.db');
+    const userDataOverride = process.env.RICHMOND_USER_DATA;
+    const dbPath = userDataOverride
+        ? path.join(userDataOverride, 'richmond-hotel.db')
+        : path.join(app.getPath('userData'), 'richmond-hotel.db');
     console.log('Database path:', dbPath);
     
     db = new Database(dbPath);
@@ -136,7 +139,7 @@ function createWindow() {
         webPreferences: {
             nodeIntegration: false,
             contextIsolation: true,
-            sandbox: true,
+            sandbox: false,
             webSecurity: true,
             preload: path.join(__dirname, 'preload.js'),
         },

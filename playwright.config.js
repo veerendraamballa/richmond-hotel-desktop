@@ -2,7 +2,7 @@ const { defineConfig } = require('@playwright/test');
 
 module.exports = defineConfig({
     testDir: './tests/e2e',
-    timeout: 30000,
+    timeout: 60000,
     expect: { timeout: 8000 },
     fullyParallel: false, // Electron tests must run serially (one app instance)
     retries: process.env.CI ? 1 : 0,

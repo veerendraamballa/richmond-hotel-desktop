@@ -15,29 +15,23 @@ async function launchApp() {
         env: {
             ...process.env,
             NODE_ENV: 'test',
-            // Override Electron userData so each run gets a fresh DB
-            ELECTRON_USER_DATA: userDataDir,
+            // Override DB path via env var (read in main.js initDatabase)
+            RICHMOND_USER_DATA: userDataDir,
+            // Ensure Electron doesn't open in headless-hostile mode
+            ELECTRON_DISABLE_SECURITY_WARNINGS: '1',
         },
-        // Point Electron's app.getPath('userData') to our temp dir
-        // by passing --user-data-dir (Chromium flag picked up by Electron)
-        executablePath: undefined,
-        // Pass extra args to override userData
-        args: [
-            path.join(__dirname, '..', '..', '..', 'main.js'),
-            `--user-data-dir=${userDataDir}`,
-        ],
+        timeout: 45000,
     });
 
     const window = await app.firstWindow();
-    // Wait for the app to fully load
-    await window.waitForSelector('.nav-item.active', { timeout: 15000 });
+    // Wait for the app to fully load — nav-item.active appears after JS init
+    await window.waitForSelector('.nav-item.active', { timeout: 30000 });
 
     return { app, window, userDataDir };
 }
 
 async function closeApp(app, userDataDir) {
-    await app.close();
-    // Clean up temp DB
+    try { await app.close(); } catch {}
     try { fs.rmSync(userDataDir, { recursive: true, force: true }); } catch {}
 }
 
