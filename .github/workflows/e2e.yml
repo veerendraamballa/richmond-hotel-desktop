@@ -1,0 +1,96 @@
+name: E2E Tests
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+  workflow_dispatch:
+
+jobs:
+  e2e:
+    name: E2E on ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20.x'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Rebuild native modules
+        run: npm rebuild better-sqlite3
+
+      - name: Install Playwright browsers
+        run: npx playwright install --with-deps chromium
+
+      # Linux needs a virtual display for Electron
+      - name: Install Xvfb (Linux)
+        if: matrix.os == 'ubuntu-latest'
+        run: sudo apt-get install -y xvfb
+
+      - name: Run E2E tests (Linux)
+        if: matrix.os == 'ubuntu-latest'
+        run: xvfb-run --auto-servernum --server-args="-screen 0 1280x960x24" npx playwright test
+        env:
+          CI: true
+
+      - name: Run E2E tests (Windows/macOS)
+        if: matrix.os != 'ubuntu-latest'
+        run: npx playwright test
+        env:
+          CI: true
+
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: e2e-results-${{ matrix.os }}
+          path: |
+            test-results/
+            playwright-report/
+          retention-days: 14
+
+      - name: Upload Playwright report
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report-${{ matrix.os }}
+          path: playwright-report/
+          retention-days: 7
+
+  e2e-summary:
+    name: E2E Summary
+    needs: e2e
+    runs-on: ubuntu-latest
+    if: always()
+    permissions:
+      pull-requests: write
+
+    steps:
+      - name: Comment E2E results on PR
+        if: github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const ubuntu  = '${{ needs.e2e.result }}' === 'success' ? '✅' : '❌';
+            const windows = '${{ needs.e2e.result }}' === 'success' ? '✅' : '❌';
+            const macos   = '${{ needs.e2e.result }}' === 'success' ? '✅' : '❌';
+
+            await github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: `## E2E Test Results\n\n| Platform | Status |\n|---|---|\n| Ubuntu | ${ubuntu} |\n| Windows | ${windows} |\n| macOS | ${macos} |\n\n> Download detailed reports from the Actions artifacts.`
+            });
