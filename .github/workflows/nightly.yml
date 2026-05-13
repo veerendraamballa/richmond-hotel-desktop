@@ -63,7 +63,9 @@ jobs:
   dependency-update-check:
     name: Check for Dependency Updates
     runs-on: ubuntu-latest
-    
+    permissions:
+      issues: write
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
