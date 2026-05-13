@@ -1,0 +1,104 @@
+name: Pull Request CI
+
+on:
+  pull_request:
+    branches: [ main, develop ]
+    types: [opened, synchronize, reopened]
+
+jobs:
+  quality-checks:
+    name: Code Quality Checks
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20.x'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Check code formatting
+        run: npx prettier --check "**/*.{js,json,md}" || echo "⚠️ Code formatting check skipped"
+        continue-on-error: true
+
+      - name: Security audit
+        run: npm audit --production
+        continue-on-error: true
+
+      - name: Check for outdated dependencies
+        run: npm outdated || true
+
+  build-test:
+    name: Build Test on ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20.x'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build application
+        run: npm run build
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Check build output
+        run: |
+          if [ -d "dist" ]; then
+            echo "✅ Build directory created"
+            ls -la dist/ || dir dist
+          else
+            echo "❌ Build directory not found"
+            exit 1
+          fi
+        shell: bash
+
+  pr-comment:
+    name: PR Comment
+    needs: [quality-checks, build-test]
+    runs-on: ubuntu-latest
+    if: always()
+    
+    steps:
+      - name: Comment on PR
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const qualityStatus = '${{ needs.quality-checks.result }}';
+            const buildStatus = '${{ needs.build-test.result }}';
+            
+            let message = '## CI/CD Pipeline Results\n\n';
+            message += `- Quality Checks: ${qualityStatus === 'success' ? '✅' : '❌'}\n`;
+            message += `- Build Test: ${buildStatus === 'success' ? '✅' : '❌'}\n\n`;
+            
+            if (qualityStatus === 'success' && buildStatus === 'success') {
+              message += '🎉 All checks passed! Ready for review.';
+            } else {
+              message += '⚠️ Some checks failed. Please review the logs.';
+            }
+            
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: message
+            });

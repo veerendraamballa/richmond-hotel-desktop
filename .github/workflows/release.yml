@@ -1,0 +1,131 @@
+name: Release Pipeline
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'
+
+jobs:
+  create-release:
+    name: Create GitHub Release
+    runs-on: ubuntu-latest
+    outputs:
+      upload_url: ${{ steps.create_release.outputs.upload_url }}
+      version: ${{ steps.get_version.outputs.version }}
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Get version from tag
+        id: get_version
+        run: echo "version=${GITHUB_REF#refs/tags/v}" >> $GITHUB_OUTPUT
+
+      - name: Generate changelog
+        id: changelog
+        run: |
+          echo "Generating changelog..."
+          git log $(git describe --tags --abbrev=0 HEAD^)..HEAD --pretty=format:"- %s (%h)" > CHANGELOG.txt
+          cat CHANGELOG.txt
+
+      - name: Create Release
+        id: create_release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ github.ref }}
+          release_name: Richmond Hotel Manager v${{ steps.get_version.outputs.version }}
+          body_path: CHANGELOG.txt
+          draft: false
+          prerelease: false
+
+  build-and-upload:
+    name: Build and Upload - ${{ matrix.config.name }}
+    needs: create-release
+    runs-on: ${{ matrix.config.os }}
+    strategy:
+      matrix:
+        config:
+          - name: Windows
+            os: windows-latest
+            platform: win
+            artifact: '*.exe'
+          - name: macOS
+            os: macos-latest
+            platform: mac
+            artifact: '*.dmg'
+          - name: Linux
+            os: ubuntu-latest
+            platform: linux
+            artifact: '*.AppImage'
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20.x'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build for ${{ matrix.config.platform }}
+        run: npm run build:${{ matrix.config.platform }}
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Find built files (Windows)
+        if: matrix.config.os == 'windows-latest'
+        id: find_windows
+        run: |
+          $file = Get-ChildItem -Path dist -Filter *.exe | Select-Object -First 1
+          echo "file_path=$($file.FullName)" >> $env:GITHUB_OUTPUT
+          echo "file_name=$($file.Name)" >> $env:GITHUB_OUTPUT
+        shell: pwsh
+
+      - name: Find built files (Unix)
+        if: matrix.config.os != 'windows-latest'
+        id: find_unix
+        run: |
+          file=$(find dist -name "${{ matrix.config.artifact }}" -type f | head -n 1)
+          echo "file_path=$file" >> $GITHUB_OUTPUT
+          echo "file_name=$(basename $file)" >> $GITHUB_OUTPUT
+
+      - name: Upload Windows Release Asset
+        if: matrix.config.os == 'windows-latest'
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ needs.create-release.outputs.upload_url }}
+          asset_path: ${{ steps.find_windows.outputs.file_path }}
+          asset_name: Richmond-Hotel-Manager-v${{ needs.create-release.outputs.version }}-Windows.exe
+          asset_content_type: application/octet-stream
+
+      - name: Upload Unix Release Asset
+        if: matrix.config.os != 'windows-latest'
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ needs.create-release.outputs.upload_url }}
+          asset_path: ${{ steps.find_unix.outputs.file_path }}
+          asset_name: Richmond-Hotel-Manager-v${{ needs.create-release.outputs.version }}-${{ matrix.config.name }}.${{ matrix.config.platform == 'mac' && 'dmg' || 'AppImage' }}
+          asset_content_type: application/octet-stream
+
+  notify-release:
+    name: Notify Release Complete
+    needs: [create-release, build-and-upload]
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Success notification
+        run: |
+          echo "✅ Release v${{ needs.create-release.outputs.version }} completed successfully!"
+          echo "📦 Artifacts uploaded for all platforms"
