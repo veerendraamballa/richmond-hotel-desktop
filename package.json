@@ -58,7 +58,9 @@
             "x64"
           ]
         }
-      ]
+      ],
+      "signingHashAlgorithms": ["sha256"],
+      "signDlls": false
     },
     "mac": {
       "target": [
