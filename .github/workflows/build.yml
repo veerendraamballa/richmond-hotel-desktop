@@ -66,7 +66,7 @@ jobs:
 
       # ── macOS code signing ────────────────────────────────────────────────────
       - name: Import macOS signing certificate
-        if: matrix.os == 'macos-latest' && env.APPLE_CERTIFICATE != ''
+        if: matrix.os == 'macos-latest' && secrets.APPLE_CERTIFICATE != ''
         env:
           APPLE_CERTIFICATE: ${{ secrets.APPLE_CERTIFICATE }}
           APPLE_CERTIFICATE_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
@@ -75,34 +75,59 @@ jobs:
           security create-keychain -p actions build.keychain
           security default-keychain -s build.keychain
           security unlock-keychain -p actions build.keychain
-          security import certificate.p12 -k build.keychain -P "$APPLE_CERTIFICATE_PASSWORD" -T /usr/bin/codesign
+          security import certificate.p12 -k build.keychain \
+            -P "$APPLE_CERTIFICATE_PASSWORD" -T /usr/bin/codesign
           security set-key-partition-list -S apple-tool:,apple: -s -k actions build.keychain
-          rm certificate.p12
+          rm -f certificate.p12
+          echo "CSC_KEYCHAIN=build.keychain" >> $GITHUB_ENV
+          echo "CSC_KEY_PASSWORD=$APPLE_CERTIFICATE_PASSWORD" >> $GITHUB_ENV
+          echo "✅ macOS certificate imported"
 
       # ── Windows code signing ──────────────────────────────────────────────────
-      - name: Import Windows signing certificate
-        if: matrix.os == 'windows-latest' && env.WIN_CSC_LINK != ''
-        env:
-          WIN_CSC_LINK: ${{ secrets.WIN_CSC_LINK }}
-          WIN_CSC_KEY_PASSWORD: ${{ secrets.WIN_CSC_KEY_PASSWORD }}
-        run: |
-          echo "Windows certificate available — signing enabled"
+      - name: Prepare Windows signing certificate
+        if: matrix.os == 'windows-latest' && secrets.WIN_CSC_LINK != ''
+        run: echo "✅ Windows certificate available — signing enabled"
 
+      # ── Build ─────────────────────────────────────────────────────────────────
       - name: Build for ${{ matrix.platform }}
         run: npm run build:${{ matrix.platform }} -- --publish never
         env:
-          # macOS notarisation (set these secrets to enable)
+          # macOS: pass certificate via env (electron-builder picks up CSC_LINK or keychain)
+          CSC_LINK: ${{ secrets.APPLE_CERTIFICATE }}
+          CSC_KEY_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
+          # macOS notarisation — only active when Apple secrets are set
           APPLE_ID: ${{ secrets.APPLE_ID }}
           APPLE_APP_SPECIFIC_PASSWORD: ${{ secrets.APPLE_APP_SPECIFIC_PASSWORD }}
           APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
           # Windows Authenticode signing
           WIN_CSC_LINK: ${{ secrets.WIN_CSC_LINK }}
           WIN_CSC_KEY_PASSWORD: ${{ secrets.WIN_CSC_KEY_PASSWORD }}
-          # macOS identity (overridden to null if secret not set)
-          CSC_IDENTITY_AUTO_DISCOVERY: ${{ secrets.APPLE_CERTIFICATE != '' && 'true' || 'false' }}
+
+      # ── Linux GPG signing ─────────────────────────────────────────────────────
+      - name: Sign Linux artifacts with GPG
+        if: matrix.os == 'ubuntu-latest' && secrets.LINUX_GPG_PRIVATE_KEY != ''
+        env:
+          LINUX_GPG_PRIVATE_KEY: ${{ secrets.LINUX_GPG_PRIVATE_KEY }}
+          LINUX_GPG_KEY_ID: ${{ secrets.LINUX_GPG_KEY_ID }}
+        run: |
+          # Import private key
+          echo "$LINUX_GPG_PRIVATE_KEY" | base64 --decode | gpg --batch --import
+          echo "✅ GPG key imported"
+
+          # Sign every artifact in dist/
+          for f in dist/*.AppImage dist/*.deb; do
+            [ -f "$f" ] || continue
+            gpg --batch --yes --detach-sign --armor \
+              --local-user "$LINUX_GPG_KEY_ID" "$f"
+            echo "Signed: $f → $f.asc"
+          done
+
+          # Export public key alongside artifacts for user verification
+          gpg --export --armor "$LINUX_GPG_KEY_ID" > dist/richmond-hotel-signing.pub.asc
+          echo "✅ All Linux artifacts signed"
 
       - name: List build output
-        run: ls -la dist/ || dir dist
+        run: ls -la dist/
         shell: bash
 
       - name: Upload Windows artifacts
@@ -123,6 +148,7 @@ jobs:
           path: |
             dist/*.AppImage
             dist/*.deb
+            dist/*.asc
           retention-days: 30
 
       - name: Upload macOS artifacts
@@ -171,10 +197,19 @@ jobs:
             ### Downloads
             | Platform | File | Description |
             |----------|------|-------------|
-            | Windows  | `*.exe` | NSIS installer (x64) |
-            | macOS    | `*.dmg` | Disk image (x64 + arm64 universal) |
-            | Linux    | `*.AppImage` | Portable (all distros) |
-            | Linux    | `*.deb` | Debian/Ubuntu package |
+            | Windows  | `*.exe` | NSIS installer (x64) — Authenticode signed |
+            | macOS    | `*.dmg` | Disk image (x64 + arm64 universal) — code signed |
+            | Linux    | `*.AppImage` | Portable (all distros) — GPG signed |
+            | Linux    | `*.deb` | Debian/Ubuntu package — GPG signed |
+
+            ### Verifying Linux downloads
+            ```bash
+            # Import the public key
+            gpg --import richmond-hotel-signing.pub.asc
+
+            # Verify AppImage
+            gpg --verify Richmond.Hotel.Manager-*.AppImage.asc Richmond.Hotel.Manager-*.AppImage
+            ```
 
             ### What's New
             See the auto-generated release notes below.
