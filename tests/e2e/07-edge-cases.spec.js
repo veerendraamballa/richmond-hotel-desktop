@@ -18,12 +18,23 @@ function futureDate(offset) {
 test.beforeAll(async () => {
     ({ app, window, userDataDir } = await launchApp());
 
-    // Seed: one room
+    // Seed room 301 — used for the booking/double-booking tests
     await window.click('.nav-item[data-tab="rooms"]');
     await window.click('#openAddRoomBtn');
     await window.fill('#roomNumber', '301');
     await window.selectOption('#roomType', 'Suite');
     await window.fill('#roomPrice', '200');
+    await window.fill('#roomFloor', '3');
+    await window.click('#addRoomModal button[type="submit"]');
+    await expect(window.locator('#addRoomModal')).not.toHaveClass(/open/);
+
+    // Seed room 302 — stays available so the date-validation test always has
+    // a room to select (HTML5 `required` on the room <select> would otherwise
+    // block submission before JS validation runs, preventing the error toast).
+    await window.click('#openAddRoomBtn');
+    await window.fill('#roomNumber', '302');
+    await window.selectOption('#roomType', 'Standard');
+    await window.fill('#roomPrice', '100');
     await window.fill('#roomFloor', '3');
     await window.click('#addRoomModal button[type="submit"]');
     await expect(window.locator('#addRoomModal')).not.toHaveClass(/open/);
@@ -42,24 +53,26 @@ test('room disappears from booking selector once occupied', async () => {
     await window.fill('#bookingGuestName', 'Alice First');
     await window.fill('#bookingEmail', 'alice@test.com');
     await window.fill('#bookingPhone', '555-0001');
+    // Select room 301 — first real option after the placeholder
     await window.selectOption('#bookingRoom', { index: 1 });
     await window.fill('#checkInDate', futureDate(1));
     await window.fill('#checkOutDate', futureDate(3));
     await window.click('#addBookingModal button[type="submit"]');
     await expect(window.locator('#addBookingModal')).not.toHaveClass(/open/);
 
-    // Room should now be occupied — try to open New Booking modal
+    // Room 301 is now occupied — open New Booking modal and confirm 301 is gone
     await window.click('#openAddBookingBtn');
     const options = window.locator('#bookingRoom option');
-    // Only the placeholder option should remain (no available rooms)
-    await expect(options).toHaveCount(1);
+    // Placeholder + room 302 only (301 is occupied)
+    await expect(options).toHaveCount(2);
     await window.click('#addBookingModal [data-close-modal="addBookingModal"]');
 });
 
 test('occupied room badge shown correctly', async () => {
     await window.click('.nav-item[data-tab="rooms"]');
     await expect(window.locator('.badge-occupied')).toBeVisible();
-    await expect(window.locator('.badge-available')).toHaveCount(0);
+    // Room 302 is still available
+    await expect(window.locator('.badge-available')).toHaveCount(1);
 });
 
 // ── Partial payment ───────────────────────────────────────────────────────────
@@ -132,12 +145,15 @@ test('cannot create booking with check-out before check-in', async () => {
     await window.fill('#bookingGuestName', 'Bad Dates');
     await window.fill('#bookingEmail', 'bad@test.com');
     await window.fill('#bookingPhone', '555-0002');
+    // Room 302 is the only available room after 301 was booked — select it so
+    // HTML5 `required` validation doesn't block submission before JS date-check runs
+    await window.selectOption('#bookingRoom', { index: 1 });
     // check-out BEFORE check-in
     await window.fill('#checkInDate', futureDate(5));
     await window.fill('#checkOutDate', futureDate(2));
     await window.click('#addBookingModal button[type="submit"]');
-    // Toast error — bad dates rejected
-    await expect(window.locator('.toast.error')).toBeVisible();
+    // JS validation fires and shows an error toast
+    await expect(window.locator('.toast.error')).toBeVisible({ timeout: 5000 });
     await window.click('#addBookingModal [data-close-modal="addBookingModal"]');
 });
 
@@ -150,6 +166,7 @@ test('reports tab shows summary statistics', async () => {
 
 test('dashboard reflects booked room in occupancy', async () => {
     await window.click('.nav-item[data-tab="dashboard"]');
+    // Room 301 is occupied, room 302 is available
     await expect(window.locator('#occupiedRooms')).toHaveText('1');
-    await expect(window.locator('#availableRooms')).toHaveText('0');
+    await expect(window.locator('#availableRooms')).toHaveText('1');
 });
