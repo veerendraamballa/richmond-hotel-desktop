@@ -28,7 +28,7 @@ test.afterAll(async () => {
 
 test('XSS payload in room number is escaped, not executed', async () => {
     await window.click('.nav-item[data-tab="rooms"]');
-    await window.click('button:has-text("Add Room")');
+    await window.click('#openAddRoomBtn');
 
     const payload = XSS_PAYLOADS[0];
     await window.fill('#roomNumber', payload);
@@ -54,7 +54,7 @@ test('XSS payload in guest name is escaped', async () => {
     await window.click('.nav-item[data-tab="rooms"]');
 
     // Add a clean room if none exists with a valid number
-    await window.click('button:has-text("Add Room")');
+    await window.click('#openAddRoomBtn');
     await window.fill('#roomNumber', 'SEC01');
     await window.selectOption('#roomType', 'Double');
     await window.fill('#roomPrice', '99');
@@ -64,7 +64,7 @@ test('XSS payload in guest name is escaped', async () => {
 
     // Create booking with XSS in guest name
     await window.click('.nav-item[data-tab="bookings"]');
-    await window.click('button:has-text("New Booking")');
+    await window.click('#openAddBookingBtn');
 
     const xssName = '<img src=x onerror="window.__xssGuest=true">';
     await window.fill('#bookingGuestName', xssName);

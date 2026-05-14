@@ -14,7 +14,7 @@ test.beforeAll(async () => {
 
     // Seed: room + booking
     await window.click('.nav-item[data-tab="rooms"]');
-    await window.click('button:has-text("Add Room")');
+    await window.click('#openAddRoomBtn');
     await window.fill('#roomNumber', '101');
     await window.selectOption('#roomType', 'Double');
     await window.fill('#roomPrice', '100');
@@ -23,7 +23,7 @@ test.beforeAll(async () => {
     await expect(window.locator('#addRoomModal')).not.toHaveClass(/open/);
 
     await window.click('.nav-item[data-tab="bookings"]');
-    await window.click('button:has-text("New Booking")');
+    await window.click('#openAddBookingBtn');
     await window.fill('#bookingGuestName', 'Bob Brown');
     await window.fill('#bookingEmail', 'bob@example.com');
     await window.fill('#bookingPhone', '555-0001');

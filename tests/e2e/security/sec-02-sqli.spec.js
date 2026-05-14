@@ -14,7 +14,7 @@ test.beforeAll(async () => {
 
     // Seed a room via the UI
     await window.click('.nav-item[data-tab="rooms"]');
-    await window.click('button:has-text("Add Room")');
+    await window.click('#openAddRoomBtn');
     await window.fill('#roomNumber', '101');
     await window.selectOption('#roomType', 'Single');
     await window.fill('#roomPrice', '80');

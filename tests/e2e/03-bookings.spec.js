@@ -8,7 +8,7 @@ test.beforeAll(async () => {
 
     // Seed: add a room first
     await window.click('.nav-item[data-tab="rooms"]');
-    await window.click('button:has-text("Add Room")');
+    await window.click('#openAddRoomBtn');
     await window.fill('#roomNumber', '101');
     await window.selectOption('#roomType', 'Double');
     await window.fill('#roomPrice', '120');
@@ -24,7 +24,7 @@ test.afterAll(async () => {
 async function openBookingModal(win) {
     await win.click('.nav-item[data-tab="bookings"]');
     await expect(win.locator('#bookings')).toHaveClass(/active/);
-    await win.click('button:has-text("New Booking")');
+    await win.click('#openAddBookingBtn');
     await expect(win.locator('#addBookingModal')).toHaveClass(/open/);
 }
 
@@ -40,7 +40,7 @@ test('bookings page shows empty state initially', async () => {
 });
 
 test('New Booking modal opens and closes', async () => {
-    await window.click('button:has-text("New Booking")');
+    await window.click('#openAddBookingBtn');
     await expect(window.locator('#addBookingModal')).toHaveClass(/open/);
 
     await window.click('#addBookingModal .modal-close');
@@ -109,15 +109,9 @@ test('search filters bookings', async () => {
 });
 
 test('can check out a booking', async () => {
+    // Override confirm() so the check-out proceeds without a native dialog
+    await window.evaluate(() => { window.confirm = () => true; });
     await window.click('#bookingsTable button:has-text("Check Out")');
-    window.once('dialog', d => d.accept());
-    // Confirm dialog
-    await window.evaluate(() => {
-        window._origConfirm = window.confirm;
-        window.confirm = () => true;
-    });
-    await window.click('#bookingsTable button:has-text("Check Out")');
-
     // Status changes to completed
     await expect(window.locator('#bookingsTable .badge-completed')).toBeVisible();
 });

@@ -97,6 +97,17 @@ function setupEventListeners() {
     // Backup / Restore DB buttons
     document.getElementById('backupDbBtn')?.addEventListener('click', () => showToast('Use File > Backup Database from the menu', 'info'));
     document.getElementById('restoreDbBtn')?.addEventListener('click', () => showToast('Use File > Restore Database from the menu', 'info'));
+
+    // Delegated handler for dynamically generated action buttons (CSP-safe, replaces inline onclick)
+    document.addEventListener('click', e => {
+        const btn = e.target.closest('[data-action]');
+        if (!btn) return;
+        const { action, id, status, room } = btn.dataset;
+        if (action === 'cycle-status') cycleRoomStatus(parseInt(id), status);
+        if (action === 'delete-room')  deleteRoom(parseInt(id));
+        if (action === 'check-out')    checkOut(parseInt(id), parseInt(room));
+        if (action === 'process-payment') processPayment(parseInt(id));
+    });
 }
 
 // ── Navigation ────────────────────────────────────────────────────────────────
@@ -240,8 +251,8 @@ function renderRooms(filterStatus = null) {
             <div class="room-card-footer">
                 ${badge(r.status)}
                 <div style="display:flex;gap:6px;">
-                    <button class="btn btn-sm btn-secondary" onclick="cycleRoomStatus(${r.id}, '${r.status}')">Change</button>
-                    <button class="btn btn-sm btn-danger btn-icon" onclick="deleteRoom(${r.id})" title="Delete">
+                    <button class="btn btn-sm btn-secondary" data-action="cycle-status" data-id="${r.id}" data-status="${r.status}">Change</button>
+                    <button class="btn btn-sm btn-danger btn-icon" data-action="delete-room" data-id="${r.id}" title="Delete">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4a1 1 0 011-1h4a1 1 0 011 1v2"/></svg>
                     </button>
                 </div>
@@ -381,7 +392,7 @@ function renderBookings() {
                         <td>$${parseFloat(b.total_amount).toFixed(2)}</td>
                         <td>${badge(b.status)}</td>
                         <td>${b.status === 'confirmed'
-                            ? `<button class="btn btn-sm btn-danger" onclick="checkOut(${b.id},${b.room_id})">Check Out</button>`
+                            ? `<button class="btn btn-sm btn-danger" data-action="check-out" data-id="${b.id}" data-room="${b.room_id}">Check Out</button>`
                             : `<span class="table-muted">—</span>`}
                         </td>
                     </tr>
@@ -467,7 +478,7 @@ function renderBillingDetails() {
             <label class="form-label">Payment Amount ($)</label>
             <input class="form-control" type="number" id="paymentAmount" value="${due}" max="${due}" step="0.01">
         </div>
-        <button class="btn btn-success" onclick="processPayment(${b.id})">
+        <button class="btn btn-success" data-action="process-payment" data-id="${b.id}">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
             Process Payment
         </button>`;

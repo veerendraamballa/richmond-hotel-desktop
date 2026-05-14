@@ -8,7 +8,7 @@ test.beforeAll(async () => {
 
     // Seed: add a room and a booking
     await window.click('.nav-item[data-tab="rooms"]');
-    await window.click('button:has-text("Add Room")');
+    await window.click('#openAddRoomBtn');
     await window.fill('#roomNumber', '101');
     await window.selectOption('#roomType', 'Suite');
     await window.fill('#roomPrice', '250');
@@ -25,7 +25,7 @@ test.afterAll(async () => {
 });
 
 test('dashboard KPI cards are visible', async () => {
-    await expect(window.locator('.kpi-card')).toHaveCount(4);
+    await expect(window.locator('#dashboard .kpi-card')).toHaveCount(4);
 });
 
 test('total rooms KPI reflects seeded room', async () => {
@@ -54,7 +54,7 @@ test('occupancy percentage shown in donut', async () => {
 });
 
 test('refresh button reloads dashboard data', async () => {
-    await window.click('button:has-text("Refresh")');
+    await window.click('#refreshDashboardBtn');
     await expect(window.locator('.toast')).toBeVisible();
     await expect(window.locator('.toast')).toContainText('refreshed');
 });

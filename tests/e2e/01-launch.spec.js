@@ -16,7 +16,7 @@ test('app launches and shows dashboard', async () => {
     expect(title).toBeTruthy();
 
     await expect(window.locator('#dashboard .page-title')).toHaveText('Dashboard');
-    await expect(window.locator('.kpi-card')).toHaveCount(4);
+    await expect(window.locator('#dashboard .kpi-card')).toHaveCount(4);
 });
 
 test('sidebar has all navigation items', async () => {

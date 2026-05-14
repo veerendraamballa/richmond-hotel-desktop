@@ -19,7 +19,7 @@ test('rooms page shows empty state initially', async () => {
 });
 
 test('Add Room modal opens and closes', async () => {
-    await window.click('button:has-text("Add Room")');
+    await window.click('#openAddRoomBtn');
     await expect(window.locator('#addRoomModal')).toHaveClass(/open/);
 
     await window.click('.modal-close');
@@ -27,7 +27,7 @@ test('Add Room modal opens and closes', async () => {
 });
 
 test('can add a single room', async () => {
-    await window.click('button:has-text("Add Room")');
+    await window.click('#openAddRoomBtn');
     await expect(window.locator('#addRoomModal')).toHaveClass(/open/);
 
     await window.fill('#roomNumber', '101');
@@ -59,7 +59,7 @@ test('can add multiple rooms', async () => {
     ];
 
     for (const room of rooms) {
-        await window.click('button:has-text("Add Room")');
+        await window.click('#openAddRoomBtn');
         await window.fill('#roomNumber', room.number);
         await window.selectOption('#roomType', room.type);
         await window.fill('#roomPrice', room.price);
@@ -89,8 +89,8 @@ test('can change room status', async () => {
 });
 
 test('can delete a room', async () => {
-    // Accept the confirm dialog
-    window.once('dialog', d => d.accept());
+    // Override confirm() so deletion proceeds without a native dialog
+    await window.evaluate(() => { window.confirm = () => true; });
     await window.locator('.room-card').first().locator('.btn-danger').click();
 
     await expect(window.locator('.room-card')).toHaveCount(2);
@@ -98,7 +98,7 @@ test('can delete a room', async () => {
 
 test('toast notification appears on room actions', async () => {
     // Add a room and verify toast
-    await window.click('button:has-text("Add Room")');
+    await window.click('#openAddRoomBtn');
     await window.fill('#roomNumber', '301');
     await window.selectOption('#roomType', 'Deluxe');
     await window.fill('#roomPrice', '200');
