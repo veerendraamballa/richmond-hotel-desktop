@@ -29,5 +29,10 @@ contextBridge.exposeInMainWorld('electronAPI', {
 
     // Settings
     getSettings: () => ipcRenderer.invoke('get-settings'),
-    updateSetting: (key, value) => ipcRenderer.invoke('update-setting', key, value)
+    updateSetting: (key, value) => ipcRenderer.invoke('update-setting', key, value),
+
+    // Auto-updater
+    installUpdate: () => ipcRenderer.invoke('install-update'),
+    onUpdateAvailable: (cb) => ipcRenderer.on('update-available', (_e, version) => cb(version)),
+    onUpdateDownloaded: (cb) => ipcRenderer.on('update-downloaded', () => cb())
 });

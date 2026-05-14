@@ -98,6 +98,21 @@ function setupEventListeners() {
     document.getElementById('backupDbBtn')?.addEventListener('click', () => showToast('Use File > Backup Database from the menu', 'info'));
     document.getElementById('restoreDbBtn')?.addEventListener('click', () => showToast('Use File > Restore Database from the menu', 'info'));
 
+    // Auto-updater
+    if (window.electronAPI.onUpdateAvailable) {
+        window.electronAPI.onUpdateAvailable((version) => {
+            document.getElementById('updateMsg').textContent = `Version ${version} downloading…`;
+            document.getElementById('updateBanner').style.display = 'flex';
+        });
+        window.electronAPI.onUpdateDownloaded(() => {
+            document.getElementById('updateMsg').textContent = 'Update ready — restart to install.';
+            document.getElementById('updateBanner').style.display = 'flex';
+        });
+        document.getElementById('installUpdateBtn')?.addEventListener('click', () => {
+            window.electronAPI.installUpdate();
+        });
+    }
+
     // Delegated handler for dynamically generated action buttons (CSP-safe, replaces inline onclick)
     document.addEventListener('click', e => {
         const btn = e.target.closest('[data-action]');

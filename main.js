@@ -1,4 +1,5 @@
 const { app, BrowserWindow, ipcMain, dialog, Menu, session } = require('electron');
+const { autoUpdater } = require('electron-updater');
 const path = require('path');
 const Database = require('better-sqlite3');
 const fs = require('fs');
@@ -456,10 +457,42 @@ ipcMain.handle('update-setting', (event, key, value) => {
     return { success: true };
 });
 
+// ── Auto-updater ──────────────────────────────────────────────────────────────
+function setupAutoUpdater() {
+    autoUpdater.autoDownload = true;
+    autoUpdater.autoInstallOnAppQuit = true;
+
+    autoUpdater.on('update-available', (info) => {
+        if (mainWindow) {
+            mainWindow.webContents.send('update-available', info.version);
+        }
+    });
+
+    autoUpdater.on('update-downloaded', () => {
+        if (mainWindow) {
+            mainWindow.webContents.send('update-downloaded');
+        }
+    });
+
+    autoUpdater.on('error', (err) => {
+        console.error('Auto-updater error:', err.message);
+    });
+
+    // Check for updates 5 seconds after launch (not in dev)
+    if (app.isPackaged) {
+        setTimeout(() => autoUpdater.checkForUpdates(), 5000);
+    }
+}
+
+ipcMain.handle('install-update', () => {
+    autoUpdater.quitAndInstall();
+});
+
 // App lifecycle
 app.whenReady().then(() => {
     initDatabase();
     createWindow();
+    setupAutoUpdater();
 
     app.on('activate', () => {
         if (BrowserWindow.getAllWindows().length === 0) {

@@ -1,6 +1,6 @@
 {
   "name": "richmond-hotel-desktop",
-  "version": "1.0.0",
+  "version": "1.0.5",
   "description": "Richmond Hotel Management System - Desktop Application",
   "main": "main.js",
   "scripts": {
@@ -35,11 +35,13 @@
     "playwright": "^1.60.0"
   },
   "dependencies": {
-    "better-sqlite3": "^9.2.2"
+    "better-sqlite3": "^9.2.2",
+    "electron-updater": "^6.8.3"
   },
   "build": {
     "appId": "com.richmondhotel.desktop",
     "productName": "Richmond Hotel Manager",
+    "icon": "build/icons/icon",
     "directories": {
       "output": "dist"
     },
@@ -50,37 +52,49 @@
       "database/**/*",
       "node_modules/**/*"
     ],
+    "publish": {
+      "provider": "github",
+      "owner": "veerendraamballa",
+      "repo": "richmond-hotel-desktop"
+    },
     "win": {
       "target": [
         {
           "target": "nsis",
-          "arch": [
-            "x64"
-          ]
+          "arch": ["x64"]
+        },
+        {
+          "target": "appx",
+          "arch": ["x64"]
         }
       ],
+      "icon": "build/icons/icon.ico",
       "signingHashAlgorithms": ["sha256"],
       "signDlls": false
+    },
+    "appx": {
+      "displayName": "Richmond Hotel Manager",
+      "identityName": "RichmondHotel.HotelManager",
+      "publisher": "CN=Richmond Hotel",
+      "publisherDisplayName": "Richmond Hotel",
+      "applicationId": "RichmondHotelManager",
+      "backgroundColor": "#1a2744"
     },
     "mac": {
       "target": [
         {
           "target": "dmg",
-          "arch": [
-            "x64",
-            "arm64"
-          ]
+          "arch": ["x64", "arm64"]
         }
       ],
+      "icon": "build/icons/icon.icns",
       "identity": null,
       "hardenedRuntime": false,
       "gatekeeperAssess": false
     },
     "linux": {
-      "target": [
-        "AppImage",
-        "deb"
-      ],
+      "target": ["AppImage", "deb"],
+      "icon": "build/icons/icon.png",
       "category": "Office"
     },
     "nsis": {

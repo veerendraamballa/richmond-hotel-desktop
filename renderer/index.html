@@ -467,6 +467,12 @@
     <!-- Toast Notification -->
     <div id="toastContainer" class="toast-container"></div>
 
+    <!-- Auto-update banner (shown when update downloaded) -->
+    <div id="updateBanner" style="display:none;position:fixed;bottom:0;left:0;right:0;background:#1a2744;color:#fff;padding:10px 20px;align-items:center;justify-content:space-between;z-index:9999;font-size:14px;">
+      <span id="updateMsg">A new version is ready to install.</span>
+      <button id="installUpdateBtn" style="background:#4f8ef7;color:#fff;border:none;padding:6px 16px;border-radius:4px;cursor:pointer;margin-left:16px;">Install &amp; Restart</button>
+    </div>
+
     <script src="app.js"></script>
 </body>
 </html>
