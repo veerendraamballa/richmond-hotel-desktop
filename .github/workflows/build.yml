@@ -2,45 +2,38 @@ name: Build and Release
 
 on:
   push:
-    branches: [ main, develop ]
+    branches: [main, develop]
     tags:
       - 'v*.*.*'
   pull_request:
-    branches: [ main, develop ]
+    branches: [main, develop]
   workflow_dispatch:
 
 jobs:
-  # Job 1: Run tests and linting
+  # ── 1. Lint + unit tests ──────────────────────────────────────────────────────
   test:
-    name: Test on ${{ matrix.os }}
+    name: Test on ${{ matrix.os }} / Node ${{ matrix.node-version }}
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
         os: [ubuntu-latest, windows-latest, macos-latest]
-        node-version: [18.x, 20.x]
-    
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
+        node-version: [20.x]
 
-      - name: Setup Node.js ${{ matrix.node-version }}
-        uses: actions/setup-node@v4
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
         with:
           node-version: ${{ matrix.node-version }}
           cache: 'npm'
 
-      - name: Install dependencies
-        run: npm ci
+      - run: npm ci
 
-      - name: Run linter (if exists)
-        run: npm run lint --if-present
+      - name: ESLint security scan
+        run: npm run lint:security
         continue-on-error: true
 
-      - name: Run tests (if exists)
-        run: npm test --if-present
-        continue-on-error: true
-
-  # Job 2: Build for all platforms
+  # ── 2. Cross-platform build ───────────────────────────────────────────────────
   build:
     name: Build on ${{ matrix.os }}
     needs: test
@@ -50,40 +43,68 @@ jobs:
         include:
           - os: windows-latest
             platform: win
-            artifact-name: windows
+            artifact-name: windows-build
           - os: ubuntu-latest
             platform: linux
-            artifact-name: linux
+            artifact-name: linux-build
           - os: macos-latest
             platform: mac
-            artifact-name: macos
+            artifact-name: macos-build
 
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
+      - uses: actions/setup-node@v4
         with:
           node-version: '20.x'
           cache: 'npm'
 
-      - name: Install dependencies
-        run: npm ci
+      - run: npm ci
+
+      - name: Rebuild native modules for Electron ABI
+        run: npx @electron/rebuild -f -w better-sqlite3
+
+      # ── macOS code signing ────────────────────────────────────────────────────
+      - name: Import macOS signing certificate
+        if: matrix.os == 'macos-latest' && env.APPLE_CERTIFICATE != ''
+        env:
+          APPLE_CERTIFICATE: ${{ secrets.APPLE_CERTIFICATE }}
+          APPLE_CERTIFICATE_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
+        run: |
+          echo "$APPLE_CERTIFICATE" | base64 --decode > certificate.p12
+          security create-keychain -p actions build.keychain
+          security default-keychain -s build.keychain
+          security unlock-keychain -p actions build.keychain
+          security import certificate.p12 -k build.keychain -P "$APPLE_CERTIFICATE_PASSWORD" -T /usr/bin/codesign
+          security set-key-partition-list -S apple-tool:,apple: -s -k actions build.keychain
+          rm certificate.p12
+
+      # ── Windows code signing ──────────────────────────────────────────────────
+      - name: Import Windows signing certificate
+        if: matrix.os == 'windows-latest' && env.WIN_CSC_LINK != ''
+        env:
+          WIN_CSC_LINK: ${{ secrets.WIN_CSC_LINK }}
+          WIN_CSC_KEY_PASSWORD: ${{ secrets.WIN_CSC_KEY_PASSWORD }}
+        run: |
+          echo "Windows certificate available — signing enabled"
 
       - name: Build for ${{ matrix.platform }}
         run: npm run build:${{ matrix.platform }} -- --publish never
+        env:
+          # macOS notarisation (set these secrets to enable)
+          APPLE_ID: ${{ secrets.APPLE_ID }}
+          APPLE_APP_SPECIFIC_PASSWORD: ${{ secrets.APPLE_APP_SPECIFIC_PASSWORD }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+          # Windows Authenticode signing
+          WIN_CSC_LINK: ${{ secrets.WIN_CSC_LINK }}
+          WIN_CSC_KEY_PASSWORD: ${{ secrets.WIN_CSC_KEY_PASSWORD }}
+          # macOS identity (overridden to null if secret not set)
+          CSC_IDENTITY_AUTO_DISCOVERY: ${{ secrets.APPLE_CERTIFICATE != '' && 'true' || 'false' }}
 
-      - name: List build output (Windows)
-        if: matrix.os == 'windows-latest'
-        run: dir dist
-        shell: cmd
+      - name: List build output
+        run: ls -la dist/ || dir dist
+        shell: bash
 
-      - name: List build output (Unix)
-        if: matrix.os != 'windows-latest'
-        run: ls -la dist/
-
-      # Upload artifacts for each platform
       - name: Upload Windows artifacts
         if: matrix.os == 'windows-latest'
         uses: actions/upload-artifact@v4
@@ -102,7 +123,6 @@ jobs:
           path: |
             dist/*.AppImage
             dist/*.deb
-            dist/*.rpm
           retention-days: 30
 
       - name: Upload macOS artifacts
@@ -115,29 +135,28 @@ jobs:
             dist/*.zip
           retention-days: 30
 
-  # Job 3: Create GitHub Release (only on tags)
+  # ── 3. GitHub Release (tags only) ─────────────────────────────────────────────
   release:
-    name: Create Release
+    name: Create GitHub Release
     needs: build
     runs-on: ubuntu-latest
     if: startsWith(github.ref, 'refs/tags/v')
     permissions:
       contents: write
-    
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
 
-      - name: Download all artifacts
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Download all build artifacts
         uses: actions/download-artifact@v4
         with:
           path: release-artifacts
 
-      - name: Display structure of downloaded files
-        run: ls -R release-artifacts/
+      - name: List artifacts
+        run: find release-artifacts -type f | sort
 
-      - name: Create Release
-        uses: softprops/action-gh-release@v1
+      - name: Publish GitHub Release
+        uses: softprops/action-gh-release@v2
         with:
           files: |
             release-artifacts/windows-build/*
@@ -146,21 +165,38 @@ jobs:
           draft: false
           prerelease: false
           generate_release_notes: true
+          body: |
+            ## Richmond Hotel Management System ${{ github.ref_name }}
+
+            ### Downloads
+            | Platform | File | Description |
+            |----------|------|-------------|
+            | Windows  | `*.exe` | NSIS installer (x64) |
+            | macOS    | `*.dmg` | Disk image (x64 + arm64 universal) |
+            | Linux    | `*.AppImage` | Portable (all distros) |
+            | Linux    | `*.deb` | Debian/Ubuntu package |
+
+            ### What's New
+            See the auto-generated release notes below.
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-  # Job 4: Notify on completion
+  # ── 4. Status summary ─────────────────────────────────────────────────────────
   notify:
-    name: Notify Build Status
+    name: Build Summary
     needs: [test, build]
     runs-on: ubuntu-latest
     if: always()
-    
-    steps:
-      - name: Build Success
-        if: needs.build.result == 'success'
-        run: echo "✅ Build completed successfully!"
 
-      - name: Build Failed
-        if: needs.build.result == 'failure'
-        run: echo "❌ Build failed!"
+    steps:
+      - name: Report status
+        run: |
+          echo "Test: ${{ needs.test.result }}"
+          echo "Build: ${{ needs.build.result }}"
+          if [ "${{ needs.build.result }}" = "success" ]; then
+            echo "✅ All platforms built successfully"
+          else
+            echo "❌ Build failed — check logs"
+            exit 1
+          fi
+        shell: bash

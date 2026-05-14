@@ -2,9 +2,13 @@ name: Nightly Build
 
 on:
   schedule:
-    # Run every night at 2 AM UTC
-    - cron: '0 2 * * *'
+    - cron: '0 2 * * *'   # Every night at 2 AM UTC
   workflow_dispatch:
+    inputs:
+      branch:
+        description: 'Branch to build'
+        default: 'main'
+        required: false
 
 jobs:
   nightly-build:
@@ -26,6 +30,9 @@ jobs:
 
       - name: Install dependencies
         run: npm ci
+
+      - name: Rebuild native modules for Electron ABI
+        run: npx @electron/rebuild -f -w better-sqlite3
 
       - name: Run security audit
         run: npm audit --production
