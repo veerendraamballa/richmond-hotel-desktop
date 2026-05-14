@@ -62,23 +62,11 @@
         {
           "target": "nsis",
           "arch": ["x64"]
-        },
-        {
-          "target": "appx",
-          "arch": ["x64"]
         }
       ],
       "icon": "build/icons/icon.ico",
       "signingHashAlgorithms": ["sha256"],
       "signDlls": false
-    },
-    "appx": {
-      "displayName": "Richmond Hotel Manager",
-      "identityName": "RichmondHotel.HotelManager",
-      "publisher": "CN=Richmond Hotel",
-      "publisherDisplayName": "Richmond Hotel",
-      "applicationId": "RichmondHotelManager",
-      "backgroundColor": "#1a2744"
     },
     "mac": {
       "target": [

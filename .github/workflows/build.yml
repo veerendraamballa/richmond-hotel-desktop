@@ -138,7 +138,6 @@ jobs:
           name: windows-build
           path: |
             dist/*.exe
-            dist/*.appx
             dist/*.zip
           retention-days: 30
 
@@ -193,7 +192,7 @@ jobs:
           draft: false
           prerelease: false
           generate_release_notes: true
-          body: "## Richmond Hotel Management System ${{ github.ref_name }}\n\n### Downloads\n| Platform | File | Description |\n|----------|------|-------------|\n| Windows  | `*.exe` | NSIS installer (x64) — Authenticode signed |\n| Windows  | `*.appx` | MSIX package — Windows Store compatible |\n| macOS    | `*.dmg` | Disk image (x64 + arm64) |\n| Linux    | `*.AppImage` | Portable (all distros) — GPG signed |\n| Linux    | `*.deb` | Debian/Ubuntu package — GPG signed |\n\n### Auto-updates\nThe app checks for updates automatically on launch. A banner appears when an update is ready.\n\n### Verifying Linux downloads\nImport the public key: `gpg --import richmond-hotel-signing.pub.asc`\nThen verify: `gpg --verify Richmond.Hotel.Manager-*.AppImage.asc`\n\n### What's New\nSee the auto-generated release notes below."
+          body: "## Richmond Hotel Management System ${{ github.ref_name }}\n\n### Downloads\n| Platform | File | Description |\n|----------|------|-------------|\n| Windows  | `*.exe` | NSIS installer (x64) — Authenticode signed |\n| macOS    | `*.dmg` | Disk image (x64 + arm64) |\n| Linux    | `*.AppImage` | Portable (all distros) — GPG signed |\n| Linux    | `*.deb` | Debian/Ubuntu package — GPG signed |\n\n### Auto-updates\nThe app checks for updates automatically on launch. A banner appears when an update is ready.\n\n### Verifying Linux downloads\nImport the public key: `gpg --import richmond-hotel-signing.pub.asc`\nThen verify: `gpg --verify Richmond.Hotel.Manager-*.AppImage.asc`\n\n### What's New\nSee the auto-generated release notes below."
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
