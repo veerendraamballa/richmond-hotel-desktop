@@ -518,10 +518,23 @@ function renderBillingDetails() {
                 <div class="form-group" style="margin:0">
                     <label class="form-label">Method</label>
                     <select class="form-control" id="paymentMethod">
-                        <option value="Cash">Cash</option>
-                        <option value="Card">Card</option>
-                        <option value="Bank Transfer">Bank Transfer</option>
-                        <option value="Online">Online</option>
+                        <optgroup label="Card">
+                            <option value="Credit Card">Credit Card</option>
+                            <option value="Debit Card">Debit Card</option>
+                        </optgroup>
+                        <optgroup label="Cash &amp; Check">
+                            <option value="Cash">Cash</option>
+                            <option value="Check">Check</option>
+                        </optgroup>
+                        <optgroup label="Digital Wallets">
+                            <option value="Apple Pay">Apple Pay</option>
+                            <option value="Google Pay">Google Pay</option>
+                            <option value="Zelle">Zelle</option>
+                        </optgroup>
+                        <optgroup label="Other">
+                            <option value="ACH / Bank Transfer">ACH / Bank Transfer</option>
+                            <option value="Corporate Account">Corporate Account</option>
+                        </optgroup>
                     </select>
                 </div>
             </div>

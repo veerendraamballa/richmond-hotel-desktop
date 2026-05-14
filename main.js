@@ -15,7 +15,11 @@ const ALLOWED_GUEST_UPDATE_FIELDS   = new Set(['name', 'phone', 'address', 'tota
 // ── Input validators ──────────────────────────────────────────────────────────
 const ROOM_STATUSES    = new Set(['available', 'occupied', 'maintenance']);
 const BOOKING_STATUSES = new Set(['confirmed', 'completed', 'cancelled']);
-const VALID_METHODS    = new Set(['Cash', 'Card', 'Bank Transfer', 'Online']);
+const VALID_METHODS    = new Set([
+    'Cash', 'Credit Card', 'Debit Card', 'Check',
+    'Apple Pay', 'Google Pay', 'Zelle',
+    'ACH / Bank Transfer', 'Corporate Account',
+]);
 
 function assertString(val, max = 255) {
     if (typeof val !== 'string') throw new Error('Expected string');
