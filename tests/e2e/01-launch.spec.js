@@ -15,7 +15,7 @@ test('app launches and shows dashboard', async () => {
     const title = await app.evaluate(({ app }) => app.getTitle?.() ?? 'ok');
     expect(title).toBeTruthy();
 
-    await expect(window.locator('.page-title')).toHaveText('Dashboard');
+    await expect(window.locator('#dashboard .page-title')).toHaveText('Dashboard');
     await expect(window.locator('.kpi-card')).toHaveCount(4);
 });
 

@@ -65,6 +65,38 @@ function setupEventListeners() {
             if (e.target === overlay) closeModal(overlay.id);
         });
     });
+
+    // Close modals via data-close-modal attribute (replaces inline onclick)
+    document.querySelectorAll('[data-close-modal]').forEach(btn => {
+        btn.addEventListener('click', () => closeModal(btn.dataset.closeModal));
+    });
+
+    // Sidebar toggle
+    document.getElementById('sidebarToggleBtn')?.addEventListener('click', toggleSidebar);
+
+    // Topbar refresh
+    document.getElementById('topbarRefreshBtn')?.addEventListener('click', refreshCurrent);
+
+    // Dashboard refresh button
+    document.getElementById('refreshDashboardBtn')?.addEventListener('click', refreshDashboard);
+
+    // View all bookings link on dashboard
+    document.getElementById('viewAllBookingsBtn')?.addEventListener('click', () => switchTab('bookings'));
+
+    // Open Add Room modal
+    document.getElementById('openAddRoomBtn')?.addEventListener('click', () => openModal('addRoomModal'));
+
+    // Open Add Booking modal
+    document.getElementById('openAddBookingBtn')?.addEventListener('click', () => openModal('addBookingModal'));
+
+    // Filter bar (replaces inline onclick on filter-btn elements)
+    document.querySelectorAll('.filter-btn').forEach(btn => {
+        btn.addEventListener('click', () => filterRoomCards(btn, btn.dataset.filter));
+    });
+
+    // Backup / Restore DB buttons
+    document.getElementById('backupDbBtn')?.addEventListener('click', () => showToast('Use File > Backup Database from the menu', 'info'));
+    document.getElementById('restoreDbBtn')?.addEventListener('click', () => showToast('Use File > Restore Database from the menu', 'info'));
 }
 
 // ── Navigation ────────────────────────────────────────────────────────────────

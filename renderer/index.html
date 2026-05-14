@@ -72,7 +72,7 @@
             <!-- Top Header -->
             <header class="topbar">
                 <div class="topbar-left">
-                    <button class="sidebar-toggle" onclick="toggleSidebar()">
+                    <button class="sidebar-toggle" id="sidebarToggleBtn">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
                     </button>
                     <div class="topbar-breadcrumb">
@@ -81,7 +81,7 @@
                 </div>
                 <div class="topbar-right">
                     <div class="topbar-clock" id="topbarClock"></div>
-                    <button class="topbar-btn" onclick="refreshCurrent()" title="Refresh">
+                    <button class="topbar-btn" id="topbarRefreshBtn" title="Refresh">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 11-2.12-9.36L23 10"/></svg>
                     </button>
                 </div>
@@ -97,7 +97,7 @@
                             <h1 class="page-title">Dashboard</h1>
                             <p class="page-subtitle">Welcome back — here's what's happening today</p>
                         </div>
-                        <button class="btn btn-primary" onclick="refreshDashboard()">
+                        <button class="btn btn-primary" id="refreshDashboardBtn">
                             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 11-2.12-9.36L23 10"/></svg>
                             Refresh
                         </button>
@@ -166,7 +166,7 @@
                         <div class="card" style="grid-column: span 2;">
                             <div class="card-header">
                                 <h2 class="card-title">Recent Bookings</h2>
-                                <button class="btn btn-sm btn-ghost" onclick="switchTab('bookings')">View all</button>
+                                <button class="btn btn-sm btn-ghost" id="viewAllBookingsBtn">View all</button>
                             </div>
                             <div id="recentBookings"></div>
                         </div>
@@ -180,17 +180,17 @@
                             <h1 class="page-title">Room Management</h1>
                             <p class="page-subtitle">Manage hotel rooms and their availability</p>
                         </div>
-                        <button class="btn btn-primary" onclick="openModal('addRoomModal')">
+                        <button class="btn btn-primary" id="openAddRoomBtn">
                             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
                             Add Room
                         </button>
                     </div>
 
                     <div class="filter-bar">
-                        <button class="filter-btn active" data-filter="all" onclick="filterRoomCards(this, 'all')">All</button>
-                        <button class="filter-btn" data-filter="available" onclick="filterRoomCards(this, 'available')">Available</button>
-                        <button class="filter-btn" data-filter="occupied" onclick="filterRoomCards(this, 'occupied')">Occupied</button>
-                        <button class="filter-btn" data-filter="maintenance" onclick="filterRoomCards(this, 'maintenance')">Maintenance</button>
+                        <button class="filter-btn active" data-filter="all">All</button>
+                        <button class="filter-btn" data-filter="available">Available</button>
+                        <button class="filter-btn" data-filter="occupied">Occupied</button>
+                        <button class="filter-btn" data-filter="maintenance">Maintenance</button>
                     </div>
 
                     <div id="roomsGrid" class="room-grid"></div>
@@ -203,7 +203,7 @@
                             <h1 class="page-title">Booking Management</h1>
                             <p class="page-subtitle">View and manage all reservations</p>
                         </div>
-                        <button class="btn btn-primary" onclick="openModal('addBookingModal')">
+                        <button class="btn btn-primary" id="openAddBookingBtn">
                             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
                             New Booking
                         </button>
@@ -299,11 +299,11 @@
                     <div class="card">
                         <div class="card-header"><h2 class="card-title">Data Management</h2></div>
                         <div style="display:flex;gap:12px;flex-wrap:wrap;padding:8px 0;">
-                            <button class="btn btn-secondary" onclick="alert('Use File > Backup Database from menu')">
+                            <button class="btn btn-secondary" id="backupDbBtn">
                                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
                                 Backup Database
                             </button>
-                            <button class="btn btn-secondary" onclick="alert('Use File > Restore Database from menu')">
+                            <button class="btn btn-secondary" id="restoreDbBtn">
                                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
                                 Restore Database
                             </button>
@@ -370,7 +370,7 @@
         <div class="modal">
             <div class="modal-header">
                 <h3>Add New Room</h3>
-                <button class="modal-close" onclick="closeModal('addRoomModal')">&times;</button>
+                <button class="modal-close" data-close-modal="addRoomModal">&times;</button>
             </div>
             <form id="addRoomForm">
                 <div class="form-row">
@@ -400,7 +400,7 @@
                     </div>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-ghost" onclick="closeModal('addRoomModal')">Cancel</button>
+                    <button type="button" class="btn btn-ghost" data-close-modal="addRoomModal">Cancel</button>
                     <button type="submit" class="btn btn-primary">Add Room</button>
                 </div>
             </form>
@@ -412,7 +412,7 @@
         <div class="modal modal-lg">
             <div class="modal-header">
                 <h3>Create New Booking</h3>
-                <button class="modal-close" onclick="closeModal('addBookingModal')">&times;</button>
+                <button class="modal-close" data-close-modal="addBookingModal">&times;</button>
             </div>
             <form id="addBookingForm">
                 <div class="form-row">
@@ -457,7 +457,7 @@
                 </div>
                 <div id="bookingSummary" class="booking-summary" style="display:none;"></div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-ghost" onclick="closeModal('addBookingModal')">Cancel</button>
+                    <button type="button" class="btn btn-ghost" data-close-modal="addBookingModal">Cancel</button>
                     <button type="submit" class="btn btn-primary">Confirm Booking</button>
                 </div>
             </form>
