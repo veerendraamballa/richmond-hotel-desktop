@@ -608,6 +608,9 @@ function emptyState(msg) {
 
 function showToast(message, type = 'info') {
     const container = document.getElementById('toastContainer');
+    // Remove any existing toasts immediately so there is never more than one
+    container.querySelectorAll('.toast').forEach(t => t.remove());
+
     const toast = document.createElement('div');
     toast.className = `toast ${type}`;
     toast.innerHTML = `<span class="toast-dot"></span><span class="toast-msg">${message}</span>`;

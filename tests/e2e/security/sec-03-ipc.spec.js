@@ -122,6 +122,6 @@ test('IPC handler rejects null/undefined ID', async () => {
     expect(['caught', 'no-error']).toContain(result);
 
     // App must still be functional
-    const rooms = await window.electronAPI.getRooms();
+    const rooms = await window.evaluate(() => window.electronAPI.getRooms());
     expect(Array.isArray(rooms)).toBe(true);
 });
