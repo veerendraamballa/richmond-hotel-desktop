@@ -66,11 +66,15 @@ jobs:
 
       # ── macOS code signing ────────────────────────────────────────────────────
       - name: Import macOS signing certificate
-        if: matrix.os == 'macos-latest' && secrets.APPLE_CERTIFICATE != ''
+        if: matrix.os == 'macos-latest'
         env:
           APPLE_CERTIFICATE: ${{ secrets.APPLE_CERTIFICATE }}
           APPLE_CERTIFICATE_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
         run: |
+          if [ -z "$APPLE_CERTIFICATE" ]; then
+            echo "No APPLE_CERTIFICATE secret — skipping signing"
+            exit 0
+          fi
           echo "$APPLE_CERTIFICATE" | base64 --decode > certificate.p12
           security create-keychain -p actions build.keychain
           security default-keychain -s build.keychain
@@ -79,23 +83,17 @@ jobs:
             -P "$APPLE_CERTIFICATE_PASSWORD" -T /usr/bin/codesign
           security set-key-partition-list -S apple-tool:,apple: -s -k actions build.keychain
           rm -f certificate.p12
-          echo "CSC_KEYCHAIN=build.keychain" >> $GITHUB_ENV
           echo "CSC_KEY_PASSWORD=$APPLE_CERTIFICATE_PASSWORD" >> $GITHUB_ENV
-          echo "✅ macOS certificate imported"
-
-      # ── Windows code signing ──────────────────────────────────────────────────
-      - name: Prepare Windows signing certificate
-        if: matrix.os == 'windows-latest' && secrets.WIN_CSC_LINK != ''
-        run: echo "✅ Windows certificate available — signing enabled"
+          echo "macOS certificate imported successfully"
 
       # ── Build ─────────────────────────────────────────────────────────────────
       - name: Build for ${{ matrix.platform }}
         run: npm run build:${{ matrix.platform }} -- --publish never
         env:
-          # macOS: pass certificate via env (electron-builder picks up CSC_LINK or keychain)
+          # macOS signing — electron-builder reads CSC_LINK + CSC_KEY_PASSWORD
           CSC_LINK: ${{ secrets.APPLE_CERTIFICATE }}
           CSC_KEY_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
-          # macOS notarisation — only active when Apple secrets are set
+          # macOS notarisation (set these three secrets to enable notarisation)
           APPLE_ID: ${{ secrets.APPLE_ID }}
           APPLE_APP_SPECIFIC_PASSWORD: ${{ secrets.APPLE_APP_SPECIFIC_PASSWORD }}
           APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
@@ -105,26 +103,27 @@ jobs:
 
       # ── Linux GPG signing ─────────────────────────────────────────────────────
       - name: Sign Linux artifacts with GPG
-        if: matrix.os == 'ubuntu-latest' && secrets.LINUX_GPG_PRIVATE_KEY != ''
+        if: matrix.os == 'ubuntu-latest'
         env:
           LINUX_GPG_PRIVATE_KEY: ${{ secrets.LINUX_GPG_PRIVATE_KEY }}
           LINUX_GPG_KEY_ID: ${{ secrets.LINUX_GPG_KEY_ID }}
         run: |
-          # Import private key
+          if [ -z "$LINUX_GPG_PRIVATE_KEY" ]; then
+            echo "No LINUX_GPG_PRIVATE_KEY secret — skipping GPG signing"
+            exit 0
+          fi
           echo "$LINUX_GPG_PRIVATE_KEY" | base64 --decode | gpg --batch --import
-          echo "✅ GPG key imported"
+          echo "GPG key imported"
 
-          # Sign every artifact in dist/
           for f in dist/*.AppImage dist/*.deb; do
             [ -f "$f" ] || continue
             gpg --batch --yes --detach-sign --armor \
               --local-user "$LINUX_GPG_KEY_ID" "$f"
-            echo "Signed: $f → $f.asc"
+            echo "Signed: $f"
           done
 
-          # Export public key alongside artifacts for user verification
           gpg --export --armor "$LINUX_GPG_KEY_ID" > dist/richmond-hotel-signing.pub.asc
-          echo "✅ All Linux artifacts signed"
+          echo "All Linux artifacts signed"
 
       - name: List build output
         run: ls -la dist/
@@ -191,28 +190,7 @@ jobs:
           draft: false
           prerelease: false
           generate_release_notes: true
-          body: |
-            ## Richmond Hotel Management System ${{ github.ref_name }}
-
-            ### Downloads
-            | Platform | File | Description |
-            |----------|------|-------------|
-            | Windows  | `*.exe` | NSIS installer (x64) — Authenticode signed |
-            | macOS    | `*.dmg` | Disk image (x64 + arm64 universal) — code signed |
-            | Linux    | `*.AppImage` | Portable (all distros) — GPG signed |
-            | Linux    | `*.deb` | Debian/Ubuntu package — GPG signed |
-
-            ### Verifying Linux downloads
-            ```bash
-            # Import the public key
-            gpg --import richmond-hotel-signing.pub.asc
-
-            # Verify AppImage
-            gpg --verify Richmond.Hotel.Manager-*.AppImage.asc Richmond.Hotel.Manager-*.AppImage
-            ```
-
-            ### What's New
-            See the auto-generated release notes below.
+          body: "## Richmond Hotel Management System ${{ github.ref_name }}\n\n### Downloads\n| Platform | File | Description |\n|----------|------|-------------|\n| Windows  | `*.exe` | NSIS installer (x64) — Authenticode signed |\n| macOS    | `*.dmg` | Disk image (x64 + arm64) — code signed |\n| Linux    | `*.AppImage` | Portable (all distros) — GPG signed |\n| Linux    | `*.deb` | Debian/Ubuntu package — GPG signed |\n\n### Verifying Linux downloads\nImport the public key: `gpg --import richmond-hotel-signing.pub.asc`\nThen verify: `gpg --verify Richmond.Hotel.Manager-*.AppImage.asc`\n\n### What's New\nSee the auto-generated release notes below."
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
@@ -226,12 +204,12 @@ jobs:
     steps:
       - name: Report status
         run: |
-          echo "Test: ${{ needs.test.result }}"
+          echo "Test:  ${{ needs.test.result }}"
           echo "Build: ${{ needs.build.result }}"
           if [ "${{ needs.build.result }}" = "success" ]; then
-            echo "✅ All platforms built successfully"
+            echo "All platforms built successfully"
           else
-            echo "❌ Build failed — check logs"
+            echo "Build failed — check logs"
             exit 1
           fi
         shell: bash
