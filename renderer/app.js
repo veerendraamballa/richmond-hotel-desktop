@@ -246,14 +246,22 @@ async function handleAddRoom(e) {
 function renderRooms(filterStatus = null) {
     const active = filterStatus || document.querySelector('.filter-btn.active')?.dataset.filter || 'all';
     const filtered = active === 'all' ? rooms : rooms.filter(r => r.status === active);
-    const grid = document.getElementById('roomsGrid');
+    const container = document.getElementById('roomsGrid');
 
     if (!filtered.length) {
-        grid.innerHTML = `<div style="grid-column:1/-1">${emptyState('No rooms found')}</div>`;
+        container.innerHTML = emptyState('No rooms found');
         return;
     }
 
-    grid.innerHTML = filtered.map(r => `
+    // Group by floor, sorted ascending
+    const byFloor = {};
+    filtered.forEach(r => {
+        const f = r.floor ?? 1;
+        if (!byFloor[f]) byFloor[f] = [];
+        byFloor[f].push(r);
+    });
+
+    const roomCard = r => `
         <div class="room-card">
             <div class="room-card-header">
                 <span class="room-number">Room ${esc(r.number)}</span>
@@ -261,7 +269,6 @@ function renderRooms(filterStatus = null) {
             </div>
             <div class="room-meta">
                 <div class="room-meta-row"><span>Price</span><strong>$${esc(r.price)}/night</strong></div>
-                <div class="room-meta-row"><span>Floor</span><strong>${esc(r.floor)}</strong></div>
             </div>
             <div class="room-card-footer">
                 ${badge(r.status)}
@@ -271,6 +278,17 @@ function renderRooms(filterStatus = null) {
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4a1 1 0 011-1h4a1 1 0 011 1v2"/></svg>
                     </button>
                 </div>
+            </div>
+        </div>`;
+
+    container.innerHTML = Object.keys(byFloor).sort((a, b) => a - b).map(floor => `
+        <div class="floor-section">
+            <div class="floor-header">
+                <span class="floor-label">Floor ${floor}</span>
+                <span class="floor-count">${byFloor[floor].length} room${byFloor[floor].length !== 1 ? 's' : ''}</span>
+            </div>
+            <div class="room-grid">
+                ${byFloor[floor].map(roomCard).join('')}
             </div>
         </div>
     `).join('');
@@ -483,20 +501,35 @@ function renderBillingDetails() {
     el.innerHTML = `
         <div class="billing-breakdown">
             <div class="billing-row"><span>Guest</span><span>${esc(b.guest_name)}</span></div>
-            <div class="billing-row"><span>Room</span><span>${esc(b.room_number)} (${esc(b.room_type)})</span></div>
+            <div class="billing-row"><span>Room</span><span>${esc(b.room_number)} &mdash; ${esc(b.room_type)}</span></div>
+            <div class="billing-row"><span>Check-in</span><span>${esc(b.check_in)}</span></div>
+            <div class="billing-row"><span>Check-out</span><span>${esc(b.check_out)}</span></div>
             <div class="billing-row"><span>Nights</span><span>${esc(b.nights)}</span></div>
-            <div class="billing-row"><span>Total Amount</span><span>$${parseFloat(b.total_amount).toFixed(2)}</span></div>
+            <div class="billing-row"><span>Total</span><span>$${parseFloat(b.total_amount).toFixed(2)}</span></div>
             <div class="billing-row"><span>Paid</span><span>$${parseFloat(b.paid_amount).toFixed(2)}</span></div>
             <div class="billing-row total"><span>Amount Due</span><span>$${due}</span></div>
         </div>
-        <div class="form-group" style="margin-bottom:12px;">
-            <label class="form-label">Payment Amount ($)</label>
-            <input class="form-control" type="number" id="paymentAmount" value="${due}" max="${due}" step="0.01">
-        </div>
-        <button class="btn btn-success" data-action="process-payment" data-id="${b.id}">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
-            Process Payment
-        </button>`;
+        <div class="billing-actions">
+            <div class="billing-method-row">
+                <div class="form-group" style="margin:0">
+                    <label class="form-label">Amount ($)</label>
+                    <input class="form-control" type="number" id="paymentAmount" value="${due}" max="${due}" step="0.01">
+                </div>
+                <div class="form-group" style="margin:0">
+                    <label class="form-label">Method</label>
+                    <select class="form-control" id="paymentMethod">
+                        <option value="Cash">Cash</option>
+                        <option value="Card">Card</option>
+                        <option value="Bank Transfer">Bank Transfer</option>
+                        <option value="Online">Online</option>
+                    </select>
+                </div>
+            </div>
+            <button class="btn btn-success" data-action="process-payment" data-id="${b.id}" style="width:100%">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+                Process Payment
+            </button>
+        </div>`;
 }
 
 async function processPayment(bookingId) {
@@ -508,10 +541,11 @@ async function processPayment(bookingId) {
     if (!amount || amount <= 0 || amount > due) { showToast('Invalid payment amount', 'error'); return; }
 
     try {
+        const method = document.getElementById('paymentMethod')?.value || 'Cash';
         await window.electronAPI.addPayment({
             booking_id: bookingId,
             amount,
-            payment_method: 'Cash',
+            payment_method: method,
             payment_date: new Date().toISOString().split('T')[0],
             notes: '',
         });

@@ -528,6 +528,47 @@ body {
 }
 
 /* ── Room Grid ── */
+.floor-section {
+    margin-bottom: 28px;
+}
+
+.floor-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 14px;
+    padding-bottom: 10px;
+    border-bottom: 2px solid var(--border);
+}
+
+.floor-label {
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--text-primary);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.floor-label::before {
+    content: '';
+    display: inline-block;
+    width: 4px;
+    height: 18px;
+    background: var(--blue);
+    border-radius: 2px;
+}
+
+.floor-count {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-secondary);
+    background: var(--bg);
+    border: 1px solid var(--border);
+    padding: 2px 8px;
+    border-radius: 20px;
+}
+
 .room-grid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
@@ -808,34 +849,64 @@ select.form-control { cursor: pointer; }
 .settings-form .form-group { margin-bottom: 0; }
 
 /* ── Billing Details ── */
+.billing-grid {
+    display: grid;
+    grid-template-columns: 360px 1fr;
+    gap: 16px;
+    align-items: start;
+}
+
+@media (max-width: 900px) {
+    .billing-grid { grid-template-columns: 1fr; }
+}
+
 .billing-breakdown {
     background: var(--bg);
     border-radius: var(--radius-sm);
-    padding: 16px;
+    border: 1px solid var(--border);
+    padding: 0;
     margin: 16px 0;
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
+    overflow: hidden;
 }
 
 .billing-row {
     display: flex;
     justify-content: space-between;
+    align-items: center;
     font-size: 13px;
     color: var(--text-secondary);
+    padding: 10px 14px;
+    border-bottom: 1px solid var(--border);
 }
 
+.billing-row:last-child { border-bottom: none; }
+
 .billing-row.total {
-    font-size: 15px;
+    font-size: 14px;
     font-weight: 700;
-    color: var(--red);
-    border-top: 1px solid var(--border);
-    padding-top: 10px;
+    background: var(--red-light, #fff5f5);
+    color: var(--text-primary);
+    border-top: 2px solid var(--border);
+    border-bottom: none;
+    padding: 12px 14px;
+}
+
+.billing-row span:first-child { color: var(--text-secondary); font-weight: 500; }
+.billing-row span:last-child { font-weight: 600; color: var(--text-primary); }
+.billing-row.total span:last-child { color: var(--red); font-size: 16px; }
+
+.billing-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
     margin-top: 4px;
 }
 
-.billing-row span:last-child { font-weight: 600; color: var(--text-primary); }
-.billing-row.total span:last-child { color: var(--red); }
+.billing-method-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+}
 
 /* ── Booking Summary ── */
 .booking-summary {
