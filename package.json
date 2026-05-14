@@ -72,7 +72,6 @@
           ]
         }
       ],
-      "identity": null,
       "hardenedRuntime": false,
       "gatekeeperAssess": false
     },
