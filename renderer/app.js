@@ -103,15 +103,23 @@ function setupEventListeners() {
 
     // Auto-updater
     if (window.electronAPI.onUpdateAvailable) {
+        const banner = document.getElementById('updateBanner');
+        const msg = document.getElementById('updateMsg');
+        const btn = document.getElementById('installUpdateBtn');
+
         window.electronAPI.onUpdateAvailable((version) => {
-            document.getElementById('updateMsg').textContent = `Version ${version} downloading…`;
-            document.getElementById('updateBanner').style.display = 'flex';
+            msg.textContent = `Version ${version} downloading…`;
+            btn.disabled = true;
+            btn.textContent = 'Downloading…';
+            banner.style.display = 'flex';
         });
         window.electronAPI.onUpdateDownloaded(() => {
-            document.getElementById('updateMsg').textContent = 'Update ready — restart to install.';
-            document.getElementById('updateBanner').style.display = 'flex';
+            msg.textContent = 'Update ready — click to restart and install.';
+            btn.disabled = false;
+            btn.textContent = 'Install & Restart';
+            banner.style.display = 'flex';
         });
-        document.getElementById('installUpdateBtn')?.addEventListener('click', () => {
+        btn?.addEventListener('click', () => {
             window.electronAPI.installUpdate();
         });
     }
