@@ -65,6 +65,7 @@ test('electronAPI only exposes expected methods', async () => {
         'addBooking', 'addGuest', 'addPayment', 'addRoom',
         'deleteRoom', 'getBookings', 'getDashboardStats', 'getGuestByEmail',
         'getGuests', 'getPayments', 'getRooms', 'getSettings',
+        'installUpdate', 'onUpdateAvailable', 'onUpdateDownloaded',
         'updateBooking', 'updateGuest', 'updateRoom', 'updateSetting',
     ].sort();
     expect(methods).toEqual(expected);
