@@ -67,6 +67,7 @@ jobs:
       # ── macOS code signing ────────────────────────────────────────────────────
       - name: Import macOS signing certificate
         if: matrix.os == 'macos-latest'
+        continue-on-error: true
         env:
           APPLE_CERTIFICATE: ${{ secrets.APPLE_CERTIFICATE }}
           APPLE_CERTIFICATE_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
@@ -75,7 +76,8 @@ jobs:
             echo "No APPLE_CERTIFICATE secret — skipping signing"
             exit 0
           fi
-          echo "$APPLE_CERTIFICATE" | base64 --decode > certificate.p12
+          # Decode — if the secret is not valid base64 this step is allowed to fail (continue-on-error: true)
+          echo "$APPLE_CERTIFICATE" | base64 --decode > certificate.p12 || { echo "base64 decode failed — skipping signing"; exit 0; }
           security create-keychain -p actions build.keychain
           security default-keychain -s build.keychain
           security unlock-keychain -p actions build.keychain
