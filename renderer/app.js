@@ -132,11 +132,11 @@ function switchTab(tab) {
     document.querySelectorAll('.nav-item').forEach(i => i.classList.toggle('active', i.dataset.tab === tab));
     document.querySelectorAll('.tab-content').forEach(c => c.classList.toggle('active', c.id === tab));
 
-    const labels = { dashboard: 'Dashboard', rooms: 'Room Management', bookings: 'Bookings', guests: 'Guests', billing: 'Billing & Payments', reports: 'Reports', settings: 'Settings' };
-    document.getElementById('currentPageName').textContent = labels[tab] || tab;
+    const labels = new Map([['dashboard', 'Dashboard'], ['rooms', 'Room Management'], ['bookings', 'Bookings'], ['guests', 'Guests'], ['billing', 'Billing & Payments'], ['reports', 'Reports'], ['settings', 'Settings']]);
+    document.getElementById('currentPageName').textContent = labels.get(tab) || tab;
 
-    const actions = { dashboard: loadDashboard, rooms: renderRooms, bookings: () => { renderBookings(); updateBookingRoomSelect(); }, guests: renderGuests, billing: () => { renderPayments(); updateBillingBookingSelect(); }, reports: loadReports, settings: loadSettings };
-    actions[tab]?.();
+    const actions = new Map([['dashboard', loadDashboard], ['rooms', renderRooms], ['bookings', () => { renderBookings(); updateBookingRoomSelect(); }], ['guests', renderGuests], ['billing', () => { renderPayments(); updateBillingBookingSelect(); }], ['reports', loadReports], ['settings', loadSettings]]);
+    actions.get(tab)?.();
 }
 
 function toggleSidebar() {
@@ -254,11 +254,11 @@ function renderRooms(filterStatus = null) {
     }
 
     // Group by floor, sorted ascending
-    const byFloor = {};
+    const byFloor = new Map();
     filtered.forEach(r => {
         const f = r.floor ?? 1;
-        if (!byFloor[f]) byFloor[f] = [];
-        byFloor[f].push(r);
+        if (!byFloor.get(f)) byFloor.set(f, []);
+        byFloor.get(f).push(r);
     });
 
     const roomCard = r => `
@@ -281,14 +281,14 @@ function renderRooms(filterStatus = null) {
             </div>
         </div>`;
 
-    container.innerHTML = Object.keys(byFloor).sort((a, b) => a - b).map(floor => `
+    container.innerHTML = [...byFloor.keys()].sort((a, b) => a - b).map(floor => `
         <div class="floor-section">
             <div class="floor-header">
                 <span class="floor-label">Floor ${floor}</span>
-                <span class="floor-count">${byFloor[floor].length} room${byFloor[floor].length !== 1 ? 's' : ''}</span>
+                <span class="floor-count">${byFloor.get(floor).length} room${byFloor.get(floor).length !== 1 ? 's' : ''}</span>
             </div>
             <div class="room-grid">
-                ${byFloor[floor].map(roomCard).join('')}
+                ${byFloor.get(floor).map(roomCard).join('')}
             </div>
         </div>
     `).join('');
@@ -651,8 +651,8 @@ function esc(str) {
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 function badge(status) {
-    const map = { available: 'Available', occupied: 'Occupied', maintenance: 'Maintenance', confirmed: 'Confirmed', completed: 'Completed', paid: 'Paid' };
-    return `<span class="badge badge-${status}">${map[status] || status}</span>`;
+    const map = new Map([['available', 'Available'], ['occupied', 'Occupied'], ['maintenance', 'Maintenance'], ['confirmed', 'Confirmed'], ['completed', 'Completed'], ['paid', 'Paid']]);
+    return `<span class="badge badge-${status}">${map.get(status) || status}</span>`;
 }
 
 function formatDate(str) {
