@@ -48,8 +48,9 @@ test('room card shows correct type and price', async () => {
     const card = window.locator('.room-card').first();
     await expect(card.locator('.room-type-tag')).toHaveText('Double');
     await expect(card).toContainText('$150/night');
-    await expect(card).toContainText('Floor');
     await expect(card.locator('.badge')).toContainText('Available');
+    // Floor label lives in .floor-header, outside .room-card
+    await expect(window.locator('.floor-label').first()).toContainText('Floor');
 });
 
 test('can add multiple rooms', async () => {
@@ -81,17 +82,19 @@ test('filter bar filters rooms by status', async () => {
 });
 
 test('can change room status', async () => {
+    await expect(window.locator('.room-card')).toHaveCount(3);
     const card = window.locator('.room-card').first();
-    await card.locator('button:has-text("Change")').click();
+    await card.locator('button[data-action="cycle-status"]').click();
 
     // Status should cycle to Occupied
     await expect(card.locator('.badge')).toContainText('Occupied');
 });
 
 test('can delete a room', async () => {
+    await expect(window.locator('.room-card')).toHaveCount(3);
     // Override confirm() so deletion proceeds without a native dialog
     await window.evaluate(() => { window.confirm = () => true; });
-    await window.locator('.room-card').first().locator('.btn-danger').click();
+    await window.locator('.room-card').first().locator('[data-action="delete-room"]').click();
 
     await expect(window.locator('.room-card')).toHaveCount(2);
 });
