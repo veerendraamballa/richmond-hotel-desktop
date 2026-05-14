@@ -33,7 +33,7 @@ test.beforeAll(async () => {
     // block submission before JS validation runs, preventing the error toast).
     await window.click('#openAddRoomBtn');
     await window.fill('#roomNumber', '302');
-    await window.selectOption('#roomType', 'Standard');
+    await window.selectOption('#roomType', 'Single');
     await window.fill('#roomPrice', '100');
     await window.fill('#roomFloor', '3');
     await window.click('#addRoomModal button[type="submit"]');
