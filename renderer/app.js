@@ -12,6 +12,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     await loadAllData();
     setupEventListeners();
     switchTab('dashboard');
+    window.electronAPI.getAppVersion().then(v => {
+        document.getElementById('appVersion').textContent = `v${v}`;
+    });
 });
 
 function startClock() {

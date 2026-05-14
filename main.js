@@ -197,7 +197,6 @@ function createWindow() {
             label: 'View',
             submenu: [
                 { role: 'reload' },
-                { role: 'toggleDevTools' },
                 { type: 'separator' },
                 { role: 'resetZoom' },
                 { role: 'zoomIn' },
@@ -291,6 +290,8 @@ async function restoreDatabase() {
 }
 
 // IPC Handlers
+
+ipcMain.handle('get-app-version', () => app.getVersion());
 
 // Rooms
 ipcMain.handle('get-rooms', () => {

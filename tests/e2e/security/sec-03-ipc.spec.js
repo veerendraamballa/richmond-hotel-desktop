@@ -63,7 +63,7 @@ test('electronAPI only exposes expected methods', async () => {
     const methods = await window.evaluate(() => Object.keys(window.electronAPI).sort());
     const expected = [
         'addBooking', 'addGuest', 'addPayment', 'addRoom',
-        'deleteRoom', 'getBookings', 'getDashboardStats', 'getGuestByEmail',
+        'deleteRoom', 'getAppVersion', 'getBookings', 'getDashboardStats', 'getGuestByEmail',
         'getGuests', 'getPayments', 'getRooms', 'getSettings',
         'installUpdate', 'onUpdateAvailable', 'onUpdateDownloaded',
         'updateBooking', 'updateGuest', 'updateRoom', 'updateSetting',

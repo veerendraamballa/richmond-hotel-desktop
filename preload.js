@@ -31,6 +31,9 @@ contextBridge.exposeInMainWorld('electronAPI', {
     getSettings: () => ipcRenderer.invoke('get-settings'),
     updateSetting: (key, value) => ipcRenderer.invoke('update-setting', key, value),
 
+    // App info
+    getAppVersion: () => ipcRenderer.invoke('get-app-version'),
+
     // Auto-updater
     installUpdate: () => ipcRenderer.invoke('install-update'),
     onUpdateAvailable: (cb) => ipcRenderer.on('update-available', (_e, version) => cb(version)),
